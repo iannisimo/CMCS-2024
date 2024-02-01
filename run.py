@@ -2,11 +2,18 @@
 import mesa
 import traffic
 
-a = traffic.data2np('GRIDS/intersection.data')
+# a = traffic.data2np('GRIDS/intersection.data')
+rules = traffic.utils.xcf2np('GRIDS/rules.xcf')
+layers = traffic.utils.xcf2np('GRIDS/intersection.xcf')
 
-canvas_element = mesa.visualization.CanvasGrid(traffic.portrayCell, a.shape[0], a.shape[1], a.shape[0]*20, a.shape[1]*20)
+w = list(layers.values())[0].shape[0]
+h = list(layers.values())[0].shape[1]
 
-server = mesa.visualization.ModularServer(traffic.Intersection, [canvas_element], "Intersection", {'intersection_array': a})
+canvas_element = mesa.visualization.CanvasGrid(traffic.portrayCell, w, h, w*20, h*20)
+
+server = mesa.visualization.ModularServer(traffic.Intersection, [canvas_element], "Intersection", {'layers': layers, 'rules': rules})
+
 
 # %%
 server.launch(open_browser=False)
+# %%
