@@ -184,44 +184,36 @@ def city_planner(width, depth, seed):
                 
     return city
 
-#city_planner(20,20,0)
+def generate_city(city, tiles: dict):
 
-import traffic
+    tiled = {}
 
-# import intersection tiles and roundabout tiles from GRID folder
-a = traffic.data2np('GRIDS/intersection.data')
-b = traffic.data2np('GRIDS/roundabout.data')
+    tile_w = list(tiles.values())[0]['BG'].shape[0]
+    tile_h = list(tiles.values())[0]['BG'].shape[1]
+    city_with_tiles_w = city.shape[0] * tile_w
+    city_with_tiles_h = city.shape[1] * tile_h
 
-
-
-tiles = {
-    "1111i" : a,
-    "1111r" : b
-}
-
-
-def generate_city(city, tiles: np.ndarray):
-    tile_w = list(tiles.values())[0].shape[0]
-    tile_h = list(tiles.values())[0].shape[1]
+    for layer in list(list(tiles.values())[0].keys()):
+        if 'RULE' in layer:
+            continue
+        layer_tiles = np.empty((city_with_tiles_w, city_with_tiles_h), dtype=object)
+        for i in range(city_with_tiles_w):
+            for j in range(city_with_tiles_h):
+                matching_tiles = [key for key in tiles.keys() if key[:4] == city[int(i/tile_w)][int(j/tile_h)]]
+                layer_tiles[i][j] = tiles[random.choice(matching_tiles)][layer][i%tile_w][j%tile_h]
+        tiled[layer] = layer_tiles
     
-    city_with_tiles = np.empty((city.shape[0]*tile_w, city.shape[1]*tile_h), dtype=object)
+    # city_with_tiles = np.empty((city.shape[0]*tile_w, city.shape[1]*tile_h), dtype=object)
 
-    city_with_tiles_w = city_with_tiles.shape[0]
-    city_with_tiles_h = city_with_tiles.shape[1]
+    # city_with_tiles_w = city_with_tiles.shape[0]
+    # city_with_tiles_h = city_with_tiles.shape[1]
 
-    for i in range(city_with_tiles_w):
-        for j in range(city_with_tiles_h):
-            #match the cell with a random tile from "tiles" that matches the first 4 characters of the cell 
-            matching_tiles = [key for key in tiles.keys() if key[:4] == city[int(i/tile_w)][int(j/tile_h)]]
-            city_with_tiles[i][j] = tiles[random.choice(matching_tiles)][i%tile_w][j%tile_h]
+    # for i in range(city_with_tiles_w):
+    #     for j in range(city_with_tiles_h):
+    #         #match the cell with a random tile from "tiles" that matches the first 4 characters of the cell 
+    #         matching_tiles = [key for key in tiles.keys() if key[:4] == city[int(i/tile_w)][int(j/tile_h)]]
+    #         city_with_tiles[i][j] = tiles[random.choice(matching_tiles)][i%tile_w][j%tile_h]
 
             
-    return city_with_tiles
-    
-
-    
-city_with_tiles = generate_city(city_planner(5,5,0), tiles)
-
-
-    
+    return tiled
     

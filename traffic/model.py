@@ -30,7 +30,7 @@ class Stops(Enum):
     STOP_4_ISECTION = 'ff8800'
 
 class Origins(Enum):
-    ORIGIN_4_ISECTION = '010101'
+    ORIGIN_4_ISECTION = 'ff88ff'
 
 class Intersection(mesa.Model):
 
@@ -103,6 +103,12 @@ class Intersection(mesa.Model):
                         self.grid.place_agent(spawn_agent, (x,y))
                         self.schedule.add(spawn_agent)
                     else:
+                        if cell_val in [
+                            traffic.CellColor.EMPTY,
+                            traffic.CellColor.WALL,
+                            traffic.CellColor.ROAD
+                            ]:
+                            continue
                         static_agent = traffic.StaticAgent((x,y), self, traffic.CellColor(cell_val))
                         self.grid.place_agent(static_agent, (x,y))
         
