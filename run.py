@@ -4,8 +4,10 @@ import traffic
 
 # a = traffic.data2np('GRIDS/intersection.data')
 rules = traffic.utils.xcf2np('GRIDS/rules.xcf')
-trj = traffic.utils.xcf2np('GRIDS/trj.xcf')
+trjs = traffic.utils.get_traj(traffic.utils.xcf2np('GRIDS/trj.xcf'))
 layers = traffic.utils.xcf2np('GRIDS/intersection.xcf')
+
+
 
 w = list(layers.values())[0].shape[0]
 h = list(layers.values())[0].shape[1]

@@ -4,7 +4,6 @@ from random import choice, random
 import numpy as np
 import pandas as pd
 import traffic
-import os
 
 CELL_LENGTH = 1
 MAX_SPEED = 1
@@ -235,8 +234,6 @@ class Car(Agent):
         return None
 
     def step(self):
-        command = 'aplay -f cd -t wav /usr/share/sounds/alsa/Front_Center.wav'
-        os.system(command)
         if self.is_on(traffic.CellColor.STOP):
             ruleset = self.model.intersection_rules[traffic.CellColor.STOP.value]
             ruleset = ruleset[ruleset[INTENT_TO_GIVEWAY[self.intent]] == True]

@@ -34,9 +34,8 @@ class Origins(Enum):
 
 class Intersection(mesa.Model):
 
-    def __init__(self, layers: dict, rules: dict, trjs: dict):
+    def __init__(self, layers: dict, rules: dict):
         super().__init__()
-
 
         self.intersection_rules = {}
         for layer in rules:
