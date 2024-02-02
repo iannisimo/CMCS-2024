@@ -4,6 +4,7 @@ from random import choice, random
 import numpy as np
 import pandas as pd
 import traffic
+import os
 
 CELL_LENGTH = 1
 MAX_SPEED = 1
@@ -43,7 +44,7 @@ class Car(Agent):
         self.type = traffic.CellColor.CAR
         self.direction = self.getInitialHeading()
         self.true_direction = self.direction
-        self.speed = 1
+        self.speed = MAX_SPEED
         self.acceleration = 0
         self.cockiness = .5
         self.intent = choice(list(Intent))
@@ -216,12 +217,12 @@ class Car(Agent):
     
     def give_way(self):
         self.waiting_time += 1
-        if self.waiting_time > MAX_WAITING:
-            self.model.grid.remove_agent(self)
-            self.model.schedule.remove(self)
-            traffic.tracking.addDNF()
-            return True
-        rand = np.random.uniform(0, 5)
+        # if self.waiting_time > MAX_WAITING:
+        #     self.model.grid.remove_agent(self)
+        #     self.model.schedule.remove(self)
+        #     traffic.tracking.addDNF()
+        #     return True
+        rand = np.random.uniform(0, 10)
         if rand < self.cockiness:
             traffic.tracking.addDORKS()
             return False
@@ -234,6 +235,8 @@ class Car(Agent):
         return None
 
     def step(self):
+        command = 'aplay -f cd -t wav /usr/share/sounds/alsa/Front_Center.wav'
+        os.system(command)
         if self.is_on(traffic.CellColor.STOP):
             ruleset = self.model.intersection_rules[traffic.CellColor.STOP.value]
             ruleset = ruleset[ruleset[INTENT_TO_GIVEWAY[self.intent]] == True]
@@ -241,9 +244,9 @@ class Car(Agent):
                 rule_vector = np.array([rule.x, rule.y])
                 abs_x = self.pos[0] + np.dot(self.rotation, rule_vector)[0]
                 abs_y = self.pos[1] + np.dot(self.rotation, rule_vector)[1]
-                sda = traffic.SelfDestructAgent((abs_x, abs_y), self.model)
-                self.model.grid.place_agent(sda, (abs_x, abs_y))
-                self.model.schedule.add(sda)
+                # sda = traffic.SelfDestructAgent((abs_x, abs_y), self.model)
+                # self.model.grid.place_agent(sda, (abs_x, abs_y))
+                # self.model.schedule.add(sda)
                 if self.typeInCell((abs_x, abs_y), traffic.CellColor.CAR):
                     other_intent = self.getCarInPos((abs_x, abs_y)).intent
                     care_val = rule[INTENT_TO_BLINKER[self.intent]]

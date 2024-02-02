@@ -80,3 +80,36 @@ def xcf2np(xcf_file: str) -> dict:
         data[project[i].name] = grid1d
     
     return data
+
+def get_neighhd(x, y):
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            if i == 0 and j == 0:
+                continue
+            yield x + i, y + j
+
+
+import pandas as pd
+def get_traj(trjs: dict):
+    trajectoryes = {}
+    for trj in trjs:
+        traj = []
+        for x in range(trj.shape[0]):
+            for y in range(trj.shape[1]):
+                if trj[x][y] != traffic.CellColor.EMPTY.value:
+                    traj.append((x, y, trj[x][y]))
+        traj = pd.DataFrame(traj, columns=['x', 'y', 'traj'])
+        traj['traj'] = traj['traj'].astype('category')
+        origin = traj[traj['traj'].isin([o.value for o in Origins])].iloc[0]
+        trjs = traj[~traj['traj'].isin([o.value for o in Origins])]
+        traj['x'] = traj['x'] - origin['x']
+        traj['y'] = traj['y'] - origin['y']
+        trjs[traffic.agent.Intent.LEFT] = trjs['traj'].str[0] == 'f'
+        trjs[traffic.agent.Intent.STRAIGHT] = trjs['traj'].str[2] == 'f'
+        trjs[traffic.agent.Intent.RIGHT] = trjs['traj'].str[4] == 'f'
+        del trjs['traj']
+
+        for intent in [traffic.agent.Intent.LEFT, traffic.agent.Intent.STRAIGHT, traffic.agent.Intent.RIGHT]:
+            t = trjs[trjs[intent]]
+            x, y = origin[x], origin[y]
+

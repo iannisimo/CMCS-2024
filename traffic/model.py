@@ -29,11 +29,13 @@ class Rules(Enum):
 class Stops(Enum):
     STOP_4_ISECTION = 'ff8800'
 
+class Origins(Enum):
+    ORIGIN_4_ISECTION = '010101'
+
 class Intersection(mesa.Model):
 
-    def __init__(self, layers: dict, rules: dict):
+    def __init__(self, layers: dict, rules: dict, trjs: dict):
         super().__init__()
-
 
 
         self.intersection_rules = {}
@@ -59,12 +61,14 @@ class Intersection(mesa.Model):
             del rule['rule']
             self.intersection_rules[origin['rule']] = rule
 
-        print(self.intersection_rules)
+
+        self.datacollector = mesa.datacollection.DataCollector()
+
         
         # remove all layers that are rules
         layers = {k: v for k, v in layers.items() if not k.startswith('RULE')}
 
-        self.schedule = mesa.time.SimultaneousActivation(self)
+        self.schedule = mesa.time.RandomActivationByType(self)
 
         w = list(layers.values())[0].shape[0]
         h = list(layers.values())[0].shape[1]
