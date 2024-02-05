@@ -4,54 +4,31 @@ import traffic
 import numpy as np
 from gimpformats.gimpXcfDocument import GimpDocument
 
-class CellColor(Enum):
-    TRAJECTORY = '928b7d'
-    ROAD = 'ffffff'
-    WALL = '010101'
-    STOP = 'ff8800'
-    STRAIGHT = 'ff0078'
-    RIGHT = '8500ff'
-    LEFT = 'ed00ff'
+class Color(Enum):
+    pass
+
+# Static cells
+class BGColor(Color):
+    EMPTY = '000000'
+    ROAD = '010101'
+    CAR = '000000'
+
+# Interest points
+class InColor(Color):
     SPAWN = '0000ff'
     DESPAWN = 'ff00ff'
-    CAR = 'dd0000'
-    EMPTY = '000000'
-    SDA = '444477'
-    ORIGIN = 'ff88ff'
 
-class CellType(Enum):
-    TRAJECTORY = 0
-    ROAD = 1
-    WALL = 2
-    STOP = 3
-    STRAIGHT = 4
-    RIGHT = 5
-    LEFT = 6
-    SPAWN = 7
-    DESPAWN = 8
-    CAR = 9
-    EMPTY = 10
-    SDA = 11
-    ORIGIN = 12
+# Stop signal
+    # When crossing, stop and find the related ruleset
+class StColor(Color):
+    STOP_4_ISECTION = 'ff8800'
 
-CellColor2CellType = {
-    '928b7d': CellType.TRAJECTORY,
-    'ffffff': CellType.ROAD,
-    '010101': CellType.WALL,
-    'ff8800': CellType.STOP, # 4-way intersection stop
-    'ff8811': CellType.STOP, # 3-way intersection stop
-    'ff8822': CellType.STOP, # 3-way intersection give-way
-    'ff8833': CellType.STOP, # Roundabout enter
-    'ff0078': CellType.STRAIGHT,
-    '8500ff': CellType.RIGHT,
-    'ed00ff': CellType.LEFT,
-    '0000ff': CellType.SPAWN,
-    'ff00ff': CellType.DESPAWN,
-    'dd0000': CellType.CAR,
-    '000000': CellType.EMPTY,
-    '444477': CellType.SDA,
-    'ff88ff': CellType.ORIGIN
-}
+# Origin of the tile
+    # Get the new trajectory for the car
+class OrColor(Color):
+    ORIGIN_4_ISECTION   = 'ff88ff'
+    ORIGIN_1_OUT        = 'ff89ff'
+    ORIGIN_1_IN         = 'ff90ff'
 
 
 def data2np(data_file: str) -> np.ndarray:
@@ -96,24 +73,25 @@ def get_traj(trjs: dict):
         trj = trjs[trj_name]
         for x in range(trj.shape[0]):
             for y in range(trj.shape[1]):
-                if trj[x][y] != traffic.CellColor.EMPTY.value:
+                if trj[x][y] != BGColor.EMPTY.value:
                     traj.append((x, y, trj[x][y]))
         traj = pd.DataFrame(traj, columns=['x', 'y', 'traj'])
         traj['traj'] = traj['traj'].astype('category')
-        origin = traj[traj['traj'].isin([o.value for o in traffic.model.Origins])].iloc[0]
-        trjs = traj[~traj['traj'].isin([o.value for o in traffic.model.Origins])].copy()
-        traj['x'] = traj['x'] - origin['x']
-        traj['y'] = traj['y'] - origin['y']
-        trjs[traffic.agent.Intent.LEFT] = trjs['traj'].str[0] == 'f'
-        trjs[traffic.agent.Intent.STRAIGHT] = trjs['traj'].str[2] == 'f'
-        trjs[traffic.agent.Intent.RIGHT] = trjs['traj'].str[4] == 'f'
-        del trjs['traj']
+        origin = traj[traj['traj'].isin([o.value for o in OrColor])].iloc[0]
+        traj = traj[~traj['traj'].isin([o.value for o in OrColor])].copy()
+        traj[traffic.agent.Intent.LEFT] = traj['traj'].str[0] == 'f'
+        traj[traffic.agent.Intent.STRAIGHT] = traj['traj'].str[2] == 'f'
+        traj[traffic.agent.Intent.RIGHT] = traj['traj'].str[4] == 'f'
+        del traj['traj']
 
-        ret[origin['traj']] = {}
+        origin_type = OrColor(origin['traj'])
+
+        ret[origin_type] = {}
         for intent in [traffic.agent.Intent.LEFT, traffic.agent.Intent.STRAIGHT, traffic.agent.Intent.RIGHT]:
-            ret[origin['traj']][intent] = []
-            t = trjs[trjs[intent]]
+            ret[origin_type][intent] = []
+            t = traj[traj[intent]]
             x, y = origin['x'], origin['y']
+            origin_x, origin_y = x, y
             while t.shape[0] > 1:
                 t = t[(t['x'] != x) | (t['y'] != y)]
                 neighs = t[(t['x'].isin([x-1, x, x+1]))]
@@ -121,7 +99,7 @@ def get_traj(trjs: dict):
                 neighs = neighs[~((neighs['x'] == x) * (neighs['y'] == y))]
                 neigh = neighs.iloc[0]
                 x, y = neigh['x'], neigh['y']
-                ret[origin['traj']][intent].append((x, y))
+                ret[origin_type][intent].append((x - origin_x, y - origin_y))
     return ret
 
 def get_rules(rules: dict):
@@ -136,7 +114,7 @@ def get_rules(rules: dict):
             for y in range(len(colors[0])):
                 color = colors[x][y]
                 alpha = alphas[x][y]
-                if color != traffic.CellColor.EMPTY.value:
+                if color != BGColor.EMPTY.value:
                     if alpha != 255:
                         origin = (x, y, color)
                     else:
@@ -146,9 +124,12 @@ def get_rules(rules: dict):
         i_points['give_left'] = i_points['rule'].str[0:2].apply(int, base=16)
         i_points['give_straight'] = i_points['rule'].str[2:4].apply(int, base=16)
         i_points['give_right'] = i_points['rule'].str[4:6].apply(int, base=16)
+        i_points['x'] = i_points['x'] - origin[0]
+        i_points['y'] = i_points['y'] - origin[1]
+        ret[origin[2]] = i_points
     return ret
 
-def doINeedToGiveTheDuckingWay(rule: int, relative_real_direction: tuple(int, int)) -> bool:
+def doINeedToGiveTheDuckingWay(rule: int, relative_real_direction: tuple) -> bool:
     U = 7
     UR = 6
     R = 5

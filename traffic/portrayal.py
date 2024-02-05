@@ -25,19 +25,30 @@ def portrayCell(cell):
             "y": cell.pos[1],
             "Color": f"#{cell.type.value}",
         }
-        if cell.type == traffic.CellColor.ROAD:
+        if cell.type == traffic.BGColor.ROAD:
             ret['Layer'] = 0
-        elif cell.type == traffic.CellColor.TRAJECTORY:
-            ret['Layer'] = 5
         return ret
-    return {
-        "Shape": "arrowHead",
-        "Filled": "false",
-        "Layer": 20,
-        "x": cell.pos[0],
-        "y": cell.pos[1],
-        "scale": 1.5,
-        'heading_x': cell.intentD[0],
-        'heading_y': cell.intentD[1],
-        "Color": f"#{cell.color}",
-    }
+    elif type(cell) == traffic.Car:
+        print(cell.intent, cell.intentD)
+        if cell.intent != traffic.agent.Intent.NONE:
+            return {
+                "Shape": "arrowHead",
+                "Filled": "false",
+                "Layer": 20,
+                "x": cell.pos[0],
+                "y": cell.pos[1],
+                "scale": 1,
+                'heading_x': cell.intentD[0],
+                'heading_y': cell.intentD[1],
+                "Color": f"#{cell.color}",
+            }
+        else:
+            return {
+                "Shape": "circle",
+                "Filled": "true",
+                "Layer": 20,
+                "x": cell.pos[0],
+                "y": cell.pos[1],
+                "r": 1.5,
+                "Color": f"#{cell.color}",
+            }

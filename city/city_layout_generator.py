@@ -184,7 +184,31 @@ def city_planner(width, depth, seed):
                 
     return city
 
+def nsew2nesw(nsew):
+    return nsew[0] + nsew[2] + nsew[1] + nsew[3]
+
+def nesw2nsew(nesw):
+    return nesw[0] + nesw[2] + nesw[1] + nesw[3]
+
+
+def augment_tiles(tiles: dict):
+    ret = tiles.copy()
+    for key in list(tiles.keys()):
+        val = tiles[key]
+        nsew = key[:4]
+        type = key[4]
+        if nsew == '1111':
+            continue
+        nesw = nsew2nesw(nsew)
+        for i in range(1, 4):
+            nesw = nesw[-1] + nesw[:-1]
+            nsew = nesw2nsew(nesw)
+            ret[nsew + type] = {layer_key: np.rot90(val[layer_key], -i) for layer_key in val}
+    return ret
+
 def generate_city(city, tiles: dict):
+
+    tiles = augment_tiles(tiles)
 
     tiled = {}
 
@@ -192,6 +216,9 @@ def generate_city(city, tiles: dict):
     tile_h = list(tiles.values())[0]['BG'].shape[1]
     city_with_tiles_w = city.shape[0] * tile_w
     city_with_tiles_h = city.shape[1] * tile_h
+
+
+    tiles['0000a'] = {layer_key: np.full((tile_w, tile_h), '000000') for layer_key in list(list(tiles.values())[0].keys())}
 
     for layer in list(list(tiles.values())[0].keys()):
         if 'RULE' in layer:
@@ -202,17 +229,6 @@ def generate_city(city, tiles: dict):
                 matching_tiles = [key for key in tiles.keys() if key[:4] == city[int(i/tile_w)][int(j/tile_h)]]
                 layer_tiles[i][j] = tiles[random.choice(matching_tiles)][layer][i%tile_w][j%tile_h]
         tiled[layer] = layer_tiles
-    
-    # city_with_tiles = np.empty((city.shape[0]*tile_w, city.shape[1]*tile_h), dtype=object)
-
-    # city_with_tiles_w = city_with_tiles.shape[0]
-    # city_with_tiles_h = city_with_tiles.shape[1]
-
-    # for i in range(city_with_tiles_w):
-    #     for j in range(city_with_tiles_h):
-    #         #match the cell with a random tile from "tiles" that matches the first 4 characters of the cell 
-    #         matching_tiles = [key for key in tiles.keys() if key[:4] == city[int(i/tile_w)][int(j/tile_h)]]
-    #         city_with_tiles[i][j] = tiles[random.choice(matching_tiles)][i%tile_w][j%tile_h]
 
             
     return tiled
