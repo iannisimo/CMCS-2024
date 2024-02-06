@@ -21,6 +21,8 @@ class Intersection(mesa.Model):
 
         self.already_spawned = False
 
+        self.crashed = 0
+
 
         for x in range(w):
             for y in range(h):
@@ -40,6 +42,9 @@ class Intersection(mesa.Model):
                         self.schedule.add(spawn)
                     elif cell_val in [o.value for o in traffic.OrColor]:
                         static = traffic.StaticAgent((x,y), self, traffic.OrColor(cell_val))
+                        self.grid.place_agent(static, (x,y))
+                    elif cell_val in [s.value for s in traffic.StColor]:
+                        static = traffic.StaticAgent((x,y), self, traffic.StColor(cell_val))
                         self.grid.place_agent(static, (x,y))
 
                 # for k in prop_layers.keys():
