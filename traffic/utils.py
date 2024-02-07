@@ -4,6 +4,12 @@ import traffic
 import numpy as np
 from gimpformats.gimpXcfDocument import GimpDocument
 
+class RelativeDirection(Enum):
+    UP = 3
+    RIGHT = 2
+    DOWN = 1
+    LEFT = 0
+
 class Color(Enum):
     pass
 
@@ -129,8 +135,13 @@ def get_rules(rules: dict):
         i_points['give_right'] = i_points['rule'].str[5].apply(int, base=16) * give_right
         i_points['x'] = i_points['x'] - origin[0]
         i_points['y'] = i_points['y'] - origin[1]
-        ret[origin[2]] = i_points
+        ret[StColor(origin[2])] = i_points
     return ret
+
+# send an int which encodes the rule (0-f) and the intent the found car (relative to me)
+# returns true if it is not on my way
+def doYouKnowTheWay(rule: int, relative_intent: RelativeDirection) -> bool:
+    return rule & (1 << relative_intent.value) == 0
 
 def doINeedToGiveTheDuckingWay(rule: int, relative_real_direction: tuple) -> bool:
     U = 7

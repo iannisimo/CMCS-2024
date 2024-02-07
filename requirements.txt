@@ -3,3 +3,4 @@ matplotlib==3.8.2
 tqdm==4.66.1
 Mesa==2.2.4
 Pyarrow==15.0.0
+gimpformats==2023.1
