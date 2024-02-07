@@ -121,9 +121,12 @@ def get_rules(rules: dict):
                         i_points.append((x, y, color))
         i_points = pd.DataFrame(i_points, columns=['x', 'y', 'rule'])
         i_points['rule'] = i_points['rule'].astype('category')
-        i_points['give_left'] = i_points['rule'].str[0:2].apply(int, base=16)
-        i_points['give_straight'] = i_points['rule'].str[2:4].apply(int, base=16)
-        i_points['give_right'] = i_points['rule'].str[4:6].apply(int, base=16)
+        give_left = i_points['rule'].str[0] == 'f'
+        give_straight = i_points['rule'].str[2] == 'f'
+        give_right = i_points['rule'].str[4] == 'f'
+        i_points['give_left'] = i_points['rule'].str[1].apply(int, base=16) * give_left
+        i_points['give_straight'] = i_points['rule'].str[3].apply(int, base=16) * give_straight
+        i_points['give_right'] = i_points['rule'].str[5].apply(int, base=16) * give_right
         i_points['x'] = i_points['x'] - origin[0]
         i_points['y'] = i_points['y'] - origin[1]
         ret[origin[2]] = i_points

@@ -18,8 +18,8 @@ def rotate(vector, direction):
 
 CELL_LENGTH = 1
 MAX_SPEED = 1
-ACCERATION = .08
-DECELERATION = 0.17
+ACCELERATION = .09
+DECELERATION = - 0.17
 
 MAX_WAITING = 20
 
@@ -64,18 +64,23 @@ class Car(Agent):
 
         self.frac_move = 0
 
-        self.trajectory = None
-        self.origin_point = (0, 0)
-        print('spawned')
+        self.trajectory = [self.direction]
+        self.origin_point = self.pos
 
     def newIntent(self):
         # todo: add logic to change intent based on a list
         return choice([Intent.LEFT, Intent.STRAIGHT, Intent.RIGHT])
     
+    def getCell(self, pos):
+        return self.model.grid[pos] if pos[0] >= 0 and pos[0] < self.model.grid.width and pos[1] >= 0 and pos[1] < self.model.grid.height else []
+    
+    def isCellEmpty(self, pos):
+        return len(self.getCell(pos)) == 0
+
     def getInitialHeading(self):
         headings = [(1, 0), (0, 1), (-1, 0), (0, -1)]
         for h in headings:
-            if not self.model.grid.is_cell_empty((self.pos[0] + h[0], self.pos[1] + h[1])):
+            if not self.isCellEmpty((self.pos[0] + h[0], self.pos[1] + h[1])):
                 return h
 
     @property
@@ -91,53 +96,57 @@ class Car(Agent):
     def rotateTrajectory(self, trajectory):
         return [rotate(np.array([x[0], x[1]]), self.direction) for x in trajectory]
 
-    def get_pos_after_x(self, x):
-        pass
-
     def check_type_under_me(self, type_to_check):
-        cell = self.model.grid[self.pos]
+        cell = self.getCell(self.pos)
         cell_types = [type(x.type) for x in cell]
-        print("UnderME: ", cell_types)
         filtered_to_type = [x for x in cell if type(x.type) == type_to_check]
         if len(filtered_to_type) > 0:
             return filtered_to_type[0]
         return None
+    
+    @property
+    def time_to_stop(self):
+        return - (self.speed + ACCELERATION) / DECELERATION
 
     @property
     def safe_distance(self):
         # Get the distance needed to stop given the current speed and the DECELERATION rate
-        return ((self.speed) ** 2) / (2 * DECELERATION)
+        delta_s = ((self.speed + ACCELERATION) * self.time_to_stop) + 0.5 * DECELERATION * (self.time_to_stop ** 2)
+        return delta_s
     
-    def obstacle_at(self, pos):
-        cell = self.model.grid[pos]
+    def obstacle_at(self, pos, last=False):
+        cell = self.getCell(pos)
         cell = [x for x in cell if x != self]
         cell_types = [x.type for x in cell]
         cell_type_types = [type(x) for x in cell_types]
         if traffic.BGColor.CAR in cell_types:
             return True
         elif traffic.StColor in cell_type_types:
-            return True
+            return True and not last
         return False
     
-    def check_in_front(self, from_where, up_to):
-        if not self.trajectory:
+    def obstacle_in_front(self, up_to):
+        if self.state == State.STOPPED:
             return
         # TODO : Go without the trajectory
         traj_len = len(self.trajectory)
-        for i in range(1, up_to):
+        traj = self.trajectory if traj_len > 0 else [(0, 0)]
+        origin = self.origin_point if traj_len > 0 else self.pos
+        for i in range(0, up_to + 1):
             if i < traj_len:
-                pos = (self.origin_point[0] + self.trajectory[i][0], self.origin_point[1] + self.trajectory[i][1])
+                pos = (origin[0] + traj[i][0], origin[1] + traj[i][1])
             else:
                 pos = (
-                    self.origin_point[0] + (self.trajectory[traj_len - 1][0]) + (i - traj_len + 1) * self.real_direction[0], 
-                    self.origin_point[1] + (self.trajectory[traj_len - 1][1]) + (i - traj_len + 1) * self.real_direction[1])
-            if self.obstacle_at(pos):
-                print(f'me: {self.pos} - obstacle: {pos} - speed: {self.speed} - safe: {self.safe_distance} - up_to: {up_to} ')
-                self.state = State.DECELERATING
+                    origin[0] + (traj[traj_len - 1][0]) + (i - traj_len + 1) * self.real_direction[0], 
+                    origin[1] + (traj[traj_len - 1][1]) + (i - traj_len + 1) * self.real_direction[1])
+            if self.obstacle_at(pos, i == up_to):
+                return True
+        return False
+                
 
     # Retrun false if needs to be removed
-    def check_under(self, pos):
-        cell = self.model.grid[pos]
+    def simulation_checks(self, pos):
+        cell = self.getCell(pos)
         cell = [x for x in cell if x != self]
         cell_types = [x.type for x in cell]
         cell_type_types = [type(x) for x in cell_types]
@@ -150,19 +159,16 @@ class Car(Agent):
             self.origin_point = pos
             self.direction = (int(self.trajectory[0][0]), int(self.trajectory[0][1]))
 
-        # check if is on stop
-        # if traffic.StColor in cell_type_types:
-        #     self.state = State.DECELERATING
-
         # check if is on despawn
         if traffic.InColor.DESPAWN in cell_types:
             self.model.grid.remove_agent(self)
             self.model.schedule.remove(self)
             self.model.already_spawned = False
+            self.model.despawned += 1
             return False
         # check if crashed with another car
         if traffic.BGColor.CAR in cell_types:
-            for a in cell:
+            for a in cell + [self]:
                 if a.type == traffic.BGColor.CAR:
                     self.model.grid.remove_agent(a)
                     self.model.schedule.remove(a)
@@ -170,26 +176,38 @@ class Car(Agent):
             return False
         
         return True
+    
+    def agent_checks(self):
+        cell = self.getCell(self.pos)
+        cell = [x for x in cell if x != self]
+        cell_types = [x.type for x in cell]
+        cell_type_types = [type(x) for x in cell_types]
+        if traffic.StColor in cell_type_types:
+            # do rule checks
+            pass
 
-
-
+    
+    @property
+    def on_stop(self):
+        return traffic.StColor in [type(x.type) for x in self.getCell(self.pos)]
 
     def step(self):
+        if not self.pos:
+            return
         self.move()
 
     def to_int(self, tuple):
         return (int(tuple[0]), int(tuple[1]))
 
     def move(self):
-        print(self.speed)
         match self.state:
             case State.ACCELERATING:
-                self.speed += ACCERATION
+                self.speed += ACCELERATION
                 if self.speed > MAX_SPEED:
                     self.speed = MAX_SPEED
                     self.state = State.CRUISING
             case State.DECELERATING:
-                self.speed -= DECELERATION
+                self.speed += DECELERATION
                 if self.speed < 0:
                     self.speed = 0
                     self.state = State.STOPPED
@@ -197,17 +215,18 @@ class Car(Agent):
                 self.speed = MAX_SPEED
             case State.STOPPED:
                 self.speed = 0
+        self.agent_checks()
+        if self.obstacle_in_front(int((self.safe_distance + self.frac_move))):
+            self.state = State.DECELERATING
+        else:
+            self.state = State.ACCELERATING
+
         self.frac_move += self.speed
-        if self.frac_move < CELL_LENGTH:
-            return
-        # self.check_in_front(self.pos, int(np.ceil(self.safe_distance)))
-        self.check_in_front(self.pos, 7)
         moves = int(self.frac_move / CELL_LENGTH)
         self.frac_move = self.frac_move % CELL_LENGTH
         next_pos = self.pos
         for i in range(moves):
-
-            if not self.check_under(next_pos): return
+            if not self.simulation_checks(next_pos): return
             if len(self.trajectory) > 0:
                 pos = next_pos
                 next_pos = (self.origin_point[0] + self.trajectory[0][0], self.origin_point[1] + self.trajectory[0][1])
@@ -521,12 +540,13 @@ class SpawnAgent(Agent):
         self.type = traffic.InColor.SPAWN
 
     def step(self):
-        if traffic.SPAWN() and not self.model.already_spawned:
+        if traffic.SPAWN():
             self.model.already_spawned = True
             if Car not in [type(x) for x in self.model.grid[self.pos[0]][self.pos[1]]]:
                 car = Car(self.pos, self.model)
                 self.model.grid.place_agent(car, self.pos)
                 self.model.schedule.add(car)
+                self.model.spawned += 1
             else:
                 pass
 

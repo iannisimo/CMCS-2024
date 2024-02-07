@@ -1,11 +1,13 @@
 # %%
+GUI = True
+
 import mesa
 import traffic
 import city
 
 import numpy as np
 
-rules = traffic.utils.get_rules(traffic.utils.xcf2np('GRIDS/rules17.xcf', with_alpha=True))
+rules = traffic.utils.get_rules(traffic.utils.xcf2np('GRIDS/rules17Intent.xcf', with_alpha=True))
 trjs = traffic.utils.get_traj(traffic.utils.xcf2np('GRIDS/trj17.xcf'))
 _4WayI = traffic.utils.xcf2np('GRIDS/4WayI.xcf')
 _1Way = traffic.utils.xcf2np('GRIDS/1Way.xcf')
@@ -34,25 +36,38 @@ tiles = {
 
 tiled_layers = city.generate_city(map, tiles)
 
+if GUI:
 
-w = list(tiled_layers.values())[0].shape[0]
-h = list(tiled_layers.values())[0].shape[1]
+    w = list(tiled_layers.values())[0].shape[0]
+    h = list(tiled_layers.values())[0].shape[1]
 
-SCALE_MULTIPLE = 10
+    SCALE_MULTIPLE = 10
 
-canvas_element = mesa.visualization.CanvasGrid(traffic.portrayCell, w, h, w*SCALE_MULTIPLE, h*SCALE_MULTIPLE)
+    canvas_element = mesa.visualization.CanvasGrid(traffic.portrayCell, w, h, w*SCALE_MULTIPLE, h*SCALE_MULTIPLE)
 
-server = mesa.visualization.ModularServer(traffic.Intersection, [canvas_element], "Intersection", {
-    'layers': tiled_layers, 
-    'rules': rules,
-    'trjs': trjs
-})
-server.launch(open_browser=False)
+    server = mesa.visualization.ModularServer(traffic.Intersection, [canvas_element], "Intersection", {
+        'layers': tiled_layers, 
+        'rules': rules,
+        'trjs': trjs
+    })
+    server.launch(open_browser=False)
 
+else:
 
-# %%
+    br = mesa.batch_run(
+        traffic.Intersection,
+        parameters={
+            'layers': [tiled_layers],
+            'rules': [rules],
+            'trjs': [trjs]
+        },
+        iterations=1,
+        max_steps=10000,
+    )
 
-# res = mesa.batch_run(traffic.Intersection, {'layers': [tiled_layers], 'rules': [rules], 'trjs': [trjs]}, 1, 1, -1, 100, True)
-# print(res)
+    print([b['Crashed'] for b in br])
+    print([b['Spawned'] for b in br])
+    print([b['Despawned'] for b in br])
+
 
 # %%

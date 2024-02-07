@@ -10,7 +10,11 @@ class Intersection(mesa.Model):
         w = list(layers.values())[0].shape[0]
         h = list(layers.values())[0].shape[1]
 
-        self.datacollector = mesa.datacollection.DataCollector()
+        self.datacollector = mesa.DataCollector(model_reporters={
+            "Crashed": lambda m: m.crashed,
+            "Spawned": lambda m: m.spawned,
+            "Despawned": lambda m: m.despawned
+        })
 
         self.schedule = mesa.time.RandomActivationByType(self)
 
@@ -19,9 +23,13 @@ class Intersection(mesa.Model):
         self.rules = rules
         self.trjs = trjs
 
+        print(self.rules)
+
         self.already_spawned = False
 
         self.crashed = 0
+        self.spawned = 0
+        self.despawned = 0
 
 
         for x in range(w):
@@ -46,6 +54,9 @@ class Intersection(mesa.Model):
                     elif cell_val in [s.value for s in traffic.StColor]:
                         static = traffic.StaticAgent((x,y), self, traffic.StColor(cell_val))
                         self.grid.place_agent(static, (x,y))
+                        # static_car = traffic.Car((x,y), self)
+                        # self.grid.place_agent(static_car, (x,y))
+                    
 
                 # for k in prop_layers.keys():
                 #     cell_val = prop_layers[k].data[x][y]
@@ -69,4 +80,5 @@ class Intersection(mesa.Model):
 
 
     def step(self) -> None:
+        self.datacollector.collect(self)
         self.schedule.step()
