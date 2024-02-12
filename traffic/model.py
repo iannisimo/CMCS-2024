@@ -1,11 +1,13 @@
 import mesa
+from city import Pathfinder
 import pandas as pd
 import traffic
 from enum import Enum
+import numpy as np
 
 class Intersection(mesa.Model):
 
-    def __init__(self, layers: dict, rules: dict, trjs: dict, dlocks: dict):
+    def __init__(self, layers: dict, rules: dict, trjs: dict, dlocks: dict, city_layout: np.array):
         super().__init__()
         w = list(layers.values())[0].shape[0]
         h = list(layers.values())[0].shape[1]
@@ -16,6 +18,11 @@ class Intersection(mesa.Model):
             "Despawned": lambda m: m.despawned,
             "Alive": lambda m: m.spawned - m.despawned
         })
+
+
+        exits = ['0001', '0010', '0100', '1000']
+        self.city_exits = [(i, j) for i, _ in enumerate(city_layout) for j, _ in enumerate(city_layout[i]) if city_layout[i][j] in exits]
+        self.pathfinder = Pathfinder(city_layout)
 
         self.schedule = mesa.time.RandomActivationByType(self)
 
@@ -98,7 +105,17 @@ class Intersection(mesa.Model):
         if len(a) > 0:
             return a[0]
         return None
-
+    
+    def pick_exit(self, pos):
+        from random import choice
+        return choice([e for e in self.city_exits if e != pos])
+    
+    def get_path(self, pos, exit = None):
+        # 17: tile_w/h
+        pos = (int(pos[0] / 17), int(pos[1] / 17))
+        if not exit:
+            exit = self.pick_exit(pos)
+        return self.pathfinder.get_path(pos, exit), exit
 
     def step(self) -> None:
         self.datacollector.collect(self)

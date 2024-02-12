@@ -53,7 +53,7 @@ def portrayCell(cell):
         if cell.type == traffic.BGColor.ROAD:
             ret['Layer'] = 0
         return ret
-    elif type(cell) == traffic.Car:
+    elif type(cell) in [traffic.Car, traffic.agent.MaxVerstappen]:
         # print(cell.intent, cell.intentD)
         if cell.intent != traffic.agent.Intent.NONE:
             return {

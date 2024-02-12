@@ -31,6 +31,8 @@ test_map = [
     ['0010', '1111', '1111', '1111', '0001'],
     ['0000', '1000', '1000', '1000', '0000']
 ]
+
+
 # test_map = [
 #     ['0000', '0100', '0000'],
 #     ['0010', '1111', '0001'],
@@ -87,7 +89,8 @@ if GUI:
         'layers': tiled_layers, 
         'rules': rules,
         'trjs': trjs,
-        'dlocks': dlocks
+        'dlocks': dlocks,
+        'city_layout': map
     })
     server.launch(open_browser=False)
 
@@ -99,7 +102,8 @@ else:
             'layers': [tiled_layers],
             'rules': [rules],
             'trjs': [trjs],
-            'dlocks': [dlocks]
+            'dlocks': [dlocks],
+            'city_layout': [map]
         },
         iterations=1,
         max_steps=1000,
