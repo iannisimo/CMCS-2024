@@ -77,3 +77,17 @@ def portrayCell(cell):
                 "r": 1.5,
                 "Color": f"#{cell.color}",
             }
+    elif type(cell) == traffic.TrafficLightController:
+        return
+    
+    elif type(cell) == traffic.TrafficLight:
+        return {
+            "Shape": "rect",
+            "w": 1,
+            "h": 1,
+            "Filled": "true",
+            "Layer": 20,
+            "x": cell.pos[0],
+            "y": cell.pos[1],
+            "Color": f"#{cell.type.value}",
+        }

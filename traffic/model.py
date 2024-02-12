@@ -57,6 +57,11 @@ class Intersection(mesa.Model):
                         # static_car = traffic.Car((x,y), self)
                         # self.grid.place_agent(static_car, (x,y))
                     
+                    elif cell_val == traffic.InColor.TRAFFIC_LIGHT.value:
+                        tlController = traffic.TrafficLightController((x,y), self)
+                        self.grid.place_agent(tlController, (x,y))
+                        self.schedule.add(tlController)
+                    
 
                 # for k in prop_layers.keys():
                 #     cell_val = prop_layers[k].data[x][y]

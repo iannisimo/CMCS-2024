@@ -563,3 +563,65 @@ class SelfDestructAgent(Agent):
 
     def advance(self):
         pass
+
+
+class TrafficLightController(Agent):
+    def __init__(self, pos, model):
+        super().__init__(pos, model)
+        self.pos = pos
+        self.type = traffic.InColor.TRAFFIC_LIGHT
+        self.state = False
+        self.time = 0
+        
+        for i in [-2, 2]:
+            for j in [-2, 2]:
+                tl = traffic.TrafficLight((pos[0] + i, pos[1] + j), model)
+                model.grid.place_agent(tl, (pos[0] + i, pos[1] + j))
+
+
+    def step(self):
+
+        if self.time == 0:
+            self.state = not self.state
+            if self.state:
+                self.model.grid[self.pos[0] -2][self.pos[1]-2][0].type = traffic.TLColor.GREEN
+                self.model.grid[self.pos[0] +2][self.pos[1]+2][0].type = traffic.TLColor.GREEN
+                self.model.grid[self.pos[0] -2][self.pos[1]+2][0].type = traffic.TLColor.RED
+                self.model.grid[self.pos[0] +2][self.pos[1]-2][0].type = traffic.TLColor.RED
+
+            else:
+                self.model.grid[self.pos[0] -2][self.pos[1]-2][0].type = traffic.TLColor.RED
+                self.model.grid[self.pos[0] +2][self.pos[1]+2][0].type = traffic.TLColor.RED
+                self.model.grid[self.pos[0] -2][self.pos[1]+2][0].type = traffic.TLColor.GREEN
+                self.model.grid[self.pos[0] +2][self.pos[1]-2][0].type = traffic.TLColor.GREEN
+
+        elif self.time == 7:
+            
+            if self.state:
+                self.model.grid[self.pos[0] -2][self.pos[1]-2][0].type = traffic.TLColor.YELLOW
+                self.model.grid[self.pos[0] +2][self.pos[1]+2][0].type = traffic.TLColor.YELLOW
+            
+            else:
+                self.model.grid[self.pos[0] -2][self.pos[1]+2][0].type = traffic.TLColor.YELLOW
+                self.model.grid[self.pos[0] +2][self.pos[1]-2][0].type = traffic.TLColor.YELLOW
+            
+            
+        self.time = (self.time + 1) % 10
+
+
+    def advance(self):
+        pass
+
+
+
+class TrafficLight(Agent):
+    def __init__(self, pos, model):
+        super().__init__(pos, model)
+        self.pos = pos
+        self.type = traffic.TLColor.RED
+
+    def step(self):
+        pass
+
+    def advance(self):
+        pass        
