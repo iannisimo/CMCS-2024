@@ -59,7 +59,7 @@ MAX_SPEED = 1
 ACCELERATION = .09
 DECELERATION = - 0.17
 
-MAX_WAITING = 20
+DEADLOCK_PATIENCE = 4
 
 class Intent(Enum):
     STRAIGHT = 0
@@ -90,6 +90,8 @@ class Car(Agent):
         super().__init__(pos, model)
         self.color = traffic.randomRGB()
         self.type = traffic.BGColor.CAR
+
+        self.id = self.model.next_uid()
         
         self.pos = pos
         self.next_direction = self.getInitialHeading()
@@ -106,9 +108,12 @@ class Car(Agent):
         self.trajectory = [self.direction]
         self.origin_point = self.pos
 
+        self.dlocked = 0
+        self.last_dlock = None
+
     def newIntent(self):
         # todo: add logic to change intent based on a list
-        return choice([Intent.STRAIGHT, Intent.RIGHT])
+        return choice([Intent.STRAIGHT, Intent.LEFT, Intent.RIGHT])
     
     def getCell(self, pos):
         return self.model.grid[pos] if pos[0] >= 0 and pos[0] < self.model.grid.width and pos[1] >= 0 and pos[1] < self.model.grid.height else []
@@ -173,8 +178,6 @@ class Car(Agent):
         return False
     
     def obstacle_in_front(self, up_to):
-        if self.state == State.STOPPED:
-            return True
         traj_len = len(self.trajectory)
         traj = self.trajectory if traj_len > 0 else [(0, 0)]
         origin = self.origin_point if traj_len > 0 else self.pos
@@ -234,6 +237,19 @@ class Car(Agent):
         if traffic.StColor in cell_type_types:
             stop = [x for x in cell if type(x.type) == traffic.StColor][0]
             rules = self.model.rules[stop.type]
+            if stop.type in self.model.dlocks:
+                colors = ''
+                for dlock in self.model.dlocks[stop.type].iterrows():
+                    d_xy = rotate((dlock[1]['x'], dlock[1]['y']), self.direction)
+                    d_pos = (self.pos[0] + d_xy[0], self.pos[1] + d_xy[1])
+                    other = self.car_at(d_pos)
+                    other_col = other.color if other != None else '000000'
+                    colors += other_col
+                if self.last_dlock == colors:
+                    self.dlocked += 1
+                else:
+                    self.dlocked = 0
+                    self.last_dlock = colors
             giveway = INTENT_TO_GIVEWAY[self.intent]
             rules = rules[rules[giveway] != 0]
             for rule in rules.iterrows():
@@ -245,15 +261,19 @@ class Car(Agent):
                 other = self.car_at(r_pos)
                 r = rule[1][giveway]
                 if other:
-                    print(f'I am {self.color} - {self.intent} and I am giving way to {other.color} - {other.intent} at {r_pos}')
+                    # print(f'I am {self.color} - {self.intent} and I am giving way to {other.color} - {other.intent} at {r_pos}')
                     iCanGo = traffic.doYouKnowTheWay(r, rotateIntent(other.intentD, self.direction))
-                    print(f'I can{"" if iCanGo else "not"} go')
+                    # print(f'I can{"" if iCanGo else "not"} go')
                     if not iCanGo:
                         ret = False
-                    
-                
-
-            
+        if self.dlocked > DEADLOCK_PATIENCE and ret == False:
+            if random() < 1/8:
+                ret = True
+                # TODO: remove
+                self.speed = 1
+                self.state = State.ACCELERATING
+                # TODO: end
+                print(f'I am {self.color} - {self.intent} and i choose so go.')
         return ret
 
     
@@ -335,6 +355,7 @@ class SpawnAgent(Agent):
         self.type = traffic.InColor.SPAWN
 
     def step(self):
+        # if self.model.already_spawned: return
         if traffic.SPAWN():
             self.model.already_spawned = True
             if Car not in [type(x) for x in self.model.grid[self.pos[0]][self.pos[1]]]:

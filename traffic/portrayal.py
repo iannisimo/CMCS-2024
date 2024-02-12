@@ -66,6 +66,7 @@ def portrayCell(cell):
                 'heading_x': cell.intentD[0],
                 'heading_y': cell.intentD[1],
                 "Color": f"#{cell.color}",
+                "ID": cell.id
             }
         else:
             return {

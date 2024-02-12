@@ -5,7 +5,7 @@ from enum import Enum
 
 class Intersection(mesa.Model):
 
-    def __init__(self, layers: dict, rules: dict, trjs: dict):
+    def __init__(self, layers: dict, rules: dict, trjs: dict, dlocks: dict):
         super().__init__()
         w = list(layers.values())[0].shape[0]
         h = list(layers.values())[0].shape[1]
@@ -22,10 +22,11 @@ class Intersection(mesa.Model):
 
         self.rules = rules
         self.trjs = trjs
-
-        print(self.rules)
+        self.dlocks = dlocks
 
         self.already_spawned = False
+
+        self.ids = 0
 
         self.crashed = 0
         self.spawned = 0
@@ -78,7 +79,19 @@ class Intersection(mesa.Model):
         
         self.running = True
 
+    def next_uid(self):
+        self.ids += 1
+        return self.ids
+    
+    def get_agent(self, id):
+        a = [a for a in self.agents if 'id' in a.__dict__ and a.id == id]
+        if len(a) > 0:
+            return a[0]
+        return None
+
 
     def step(self) -> None:
         self.datacollector.collect(self)
         self.schedule.step()
+
+    
