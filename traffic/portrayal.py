@@ -80,12 +80,26 @@ def portrayCell(cell):
                 "ID": cell.id
             }
     elif type(cell) == traffic.TrafficLightController:
-        return
+        return {
+            "Shape": "rect",
+            "w": 1,
+            "h": 1,
+            "Filled": "true",
+            "x": cell.pos[0],
+            "y": cell.pos[1],
+            "Layer": 10,
+            "Color": f"#00ffff",
+        }
     
     elif type(cell) == traffic.TrafficLight:
         return {
+            "Shape": "rect",
+            "w": 1,
+            "h": 1,
+            "Filled": "true",
             "x": cell.pos[0],
             "y": cell.pos[1],
+            "Layer": 10,
             "Color": f"#{cell.type.value}",
         }
     elif type(cell) == traffic.InfoAgent:

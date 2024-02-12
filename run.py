@@ -1,5 +1,5 @@
 # %%
-GUI = False
+GUI = True
 
 import mesa
 import traffic

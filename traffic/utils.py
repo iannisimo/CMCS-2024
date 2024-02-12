@@ -30,6 +30,7 @@ class InColor(Color):
     # When crossing, stop and find the related ruleset
 class StColor(Color):
     STOP_4_ISECTION = 'ff8800'
+    STOP_4_TLIGHT = 'ff8900'
 
 class TLColor(Color):
     RED = 'ff0000'

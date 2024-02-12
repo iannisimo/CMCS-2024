@@ -166,6 +166,14 @@ class Car(Agent):
             return [x for x in cell if x.type == traffic.BGColor.CAR][0]
         return None
     
+    def redlight_at(self, pos):
+        cell = self.getCell(pos)
+        cell = [x for x in cell if x != self]
+        cell_types = [x.type for x in cell]
+        if traffic.TLColor.RED in cell_types:
+            return True
+        return False
+        
     def obstacle_at(self, pos, last=False):
         cell = self.getCell(pos)
         cell = [x for x in cell if x != self]
@@ -255,8 +263,8 @@ class Car(Agent):
             for rule in rules.iterrows():
                 r_xy = rotate((rule[1]['x'], rule[1]['y']), self.direction)
                 r_pos = (self.pos[0] + r_xy[0], self.pos[1] + r_xy[1])
-                # TODO if type is trafficLight and is red
-                if False:
+                # TODO Optimize if too slow
+                if self.redlight_at(r_pos):
                     return False
                 other = self.car_at(r_pos)
                 r = rule[1][giveway]
@@ -408,18 +416,18 @@ class TrafficLightController(Agent):
                 self.model.grid[self.pos[0] -2][self.pos[1]+2][0].type = traffic.TLColor.GREEN
                 self.model.grid[self.pos[0] +2][self.pos[1]-2][0].type = traffic.TLColor.GREEN
 
-        elif self.time == 7:
+        # elif self.time == 7:
             
-            if self.state:
-                self.model.grid[self.pos[0] -2][self.pos[1]-2][0].type = traffic.TLColor.YELLOW
-                self.model.grid[self.pos[0] +2][self.pos[1]+2][0].type = traffic.TLColor.YELLOW
+        #     if self.state:
+        #         self.model.grid[self.pos[0] -2][self.pos[1]-2][0].type = traffic.TLColor.YELLOW
+        #         self.model.grid[self.pos[0] +2][self.pos[1]+2][0].type = traffic.TLColor.YELLOW
             
-            else:
-                self.model.grid[self.pos[0] -2][self.pos[1]+2][0].type = traffic.TLColor.YELLOW
-                self.model.grid[self.pos[0] +2][self.pos[1]-2][0].type = traffic.TLColor.YELLOW
+        #     else:
+        #         self.model.grid[self.pos[0] -2][self.pos[1]+2][0].type = traffic.TLColor.YELLOW
+        #         self.model.grid[self.pos[0] +2][self.pos[1]-2][0].type = traffic.TLColor.YELLOW
             
             
-        self.time = (self.time + 1) % 10
+        self.time = (self.time + 1) % 100
 
 
 class TrafficLight(Agent):
