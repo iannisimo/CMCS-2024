@@ -79,6 +79,15 @@ def portrayCell(cell):
                 "Color": f"#{cell.color}",
                 "ID": cell.id
             }
+    elif type(cell) == traffic.TrafficLightController:
+        return
+    
+    elif type(cell) == traffic.TrafficLight:
+        return {
+            "x": cell.pos[0],
+            "y": cell.pos[1],
+            "Color": f"#{cell.type.value}",
+        }
     elif type(cell) == traffic.InfoAgent:
         d = {
             "Shape": "rect",
@@ -93,5 +102,3 @@ def portrayCell(cell):
             for k in mv:
                 d[k] = mv[k][-1]
         return d
-            # d += {k: cell.model.datacollector.model_vars[k][-1] for k in cell.model.datacollector.model_vars}
-        # print(self.model.datacollector.model_vars)

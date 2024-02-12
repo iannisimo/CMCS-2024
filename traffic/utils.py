@@ -24,11 +24,17 @@ class BGColor(Color):
 class InColor(Color):
     SPAWN = '0000ff'
     DESPAWN = 'ff00ff'
+    TRAFFIC_LIGHT = '00ff00'
 
 # Stop signal
     # When crossing, stop and find the related ruleset
 class StColor(Color):
     STOP_4_ISECTION = 'ff8800'
+
+class TLColor(Color):
+    RED = 'ff0000'
+    YELLOW = 'ffff00'
+    GREEN = '00ff00'
 
 # Origin of the tile
     # Get the new trajectory for the car

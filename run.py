@@ -12,8 +12,17 @@ trjs = traffic.utils.get_traj(traffic.utils.xcf2np('GRIDS/trj17.xcf'))
 dlocks = traffic.get_dlocks(traffic.xcf2np('GRIDS/Deadlocks.xcf'))
 _4WayI = traffic.utils.xcf2np('GRIDS/4WayI.xcf')
 _1Way = traffic.utils.xcf2np('GRIDS/1Way.xcf')
+_4WayTL = traffic.utils.xcf2np('GRIDS/4WayTL.xcf')
 
 
+
+#test_map = [
+#    ['0000', '0100', '0100', '0100', '0000'],
+#    ['0010', '1111', '1111', '1111', '0001'],
+#    ['0010', '1111', '1111', '1111', '0001'],
+#    ['0010', '1111', '1111', '1111', '0001'],
+#    ['0000', '1000', '1000', '1000', '0000']
+#]
 test_map = [
     ['0000', '0100', '0100', '0100', '0000'],
     ['0010', '1111', '1111', '1111', '0001'],
@@ -41,7 +50,7 @@ map = np.array(test_map, dtype=object)
 
 # map = city.city_planner(3, 3, 0)
 tiles = {
-    '1111i': _4WayI,
+    '1111i': _4WayTL,
     '0100a': _1Way
 }
 
