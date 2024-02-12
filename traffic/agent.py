@@ -54,6 +54,16 @@ def rotateIntent(intentD, direction):
         elif intentD == (0, -1):
             return traffic.RelativeDirection.UP
 
+def Rel2Intent(rel):
+    if rel == traffic.RelativeDirection.UP: return Intent.STRAIGHT
+    if rel == traffic.RelativeDirection.LEFT: return Intent.LEFT
+    if rel == traffic.RelativeDirection.RIGHT: return Intent.RIGHT
+
+
+def rotatePath(path_i_0, path_i_1):
+    return Rel2Intent(rotateIntent(path_i_0, path_i_1))
+
+
 CELL_LENGTH = 1
 MAX_SPEED = 1
 ACCELERATION = .09
@@ -111,9 +121,18 @@ class Car(Agent):
         self.dlocked = 0
         self.last_dlock = None
 
+        path, exit = self.model.get_path(self.pos)
+        self.intents = [rotatePath(path[i-1], path[i]) for i in range(1, len(path))]
+
+        self.start = {
+            'intents': self.intents.copy(),
+            'start_pos': self.pos,
+            'exit': exit
+        }
+
     def newIntent(self):
-        # todo: add logic to change intent based on a list
-        return choice([Intent.STRAIGHT, Intent.LEFT, Intent.RIGHT])
+        # return choice([Intent.STRAIGHT, Intent.LEFT, Intent.RIGHT])
+        return self.intents.pop(0)
     
     def getCell(self, pos):
         return self.model.grid[pos] if pos[0] >= 0 and pos[0] < self.model.grid.width and pos[1] >= 0 and pos[1] < self.model.grid.height else []
@@ -441,3 +460,14 @@ class InfoAgent(Agent):
     def __init__(self, unique_id: int, model: Model) -> None:
         super().__init__(unique_id, model)
     
+class MaxVerstappen(Car):
+    def __init__(self, pos, model):
+        super().__init__(pos, model)
+
+    @property
+    def speed(self):
+        return 3
+    
+    @speed.setter
+    def speed(self, value):
+        pass
