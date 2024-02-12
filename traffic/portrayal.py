@@ -44,7 +44,7 @@ def portrayCell(cell):
             "Shape": "rect",
             "w": 1,
             "h": 1,
-            "Filled": "false",
+            "Filled": "true",
             "Layer": 10,
             "x": cell.pos[0],
             "y": cell.pos[1],
@@ -77,4 +77,21 @@ def portrayCell(cell):
                 "y": cell.pos[1],
                 "r": 1.5,
                 "Color": f"#{cell.color}",
+                "ID": cell.id
             }
+    elif type(cell) == traffic.InfoAgent:
+        d = {
+            "Shape": "rect",
+            "w": 1,
+            "h": 1,
+            "Filled": "true",
+            "Layer": 20,
+            "Color": "#ff0000",
+        }
+        if len(cell.model.datacollector.model_vars['Spawned']) > 0:
+            mv = cell.model.datacollector.model_vars
+            for k in mv:
+                d[k] = mv[k][-1]
+        return d
+            # d += {k: cell.model.datacollector.model_vars[k][-1] for k in cell.model.datacollector.model_vars}
+        # print(self.model.datacollector.model_vars)

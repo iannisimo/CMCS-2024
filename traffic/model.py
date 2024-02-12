@@ -13,7 +13,8 @@ class Intersection(mesa.Model):
         self.datacollector = mesa.DataCollector(model_reporters={
             "Crashed": lambda m: m.crashed,
             "Spawned": lambda m: m.spawned,
-            "Despawned": lambda m: m.despawned
+            "Despawned": lambda m: m.despawned,
+            "Alive": lambda m: m.spawned - m.despawned
         })
 
         self.schedule = mesa.time.RandomActivationByType(self)
@@ -32,6 +33,10 @@ class Intersection(mesa.Model):
         self.spawned = 0
         self.despawned = 0
 
+
+        for i in range(3):
+            for j in range(3):
+                self.grid.place_agent(traffic.InfoAgent(0, self), (i, j))
 
         for x in range(w):
             for y in range(h):

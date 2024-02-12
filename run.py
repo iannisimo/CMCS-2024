@@ -27,6 +27,11 @@ test_map = [
 #     ['0000', '1000', '0000'],
 # ]
 # test_map = [
+#     ['0000', '0000', '0000'],
+#     ['0000', '1111', '0001'],
+#     ['0000', '0000', '0000'],
+# ]
+# test_map = [
 #     ['0000', '0000', '0000', '0000'],
 #     ['0000', '1111', '1111', '0000'],
 #     ['0010', '1111', '1111', '0000'],
@@ -50,6 +55,19 @@ if GUI:
     SCALE_MULTIPLE = 10
 
     canvas_element = mesa.visualization.CanvasGrid(traffic.portrayCell, w, h, w*SCALE_MULTIPLE, h*SCALE_MULTIPLE)
+    chart = mesa.visualization.ChartModule([{
+        "Label": "Spawned",
+        "Color": "Blue"
+    }, {
+        "Label": "Despawned",
+        "Color": "Purple"
+    }, {
+        "Label": "Crashed",
+        "Color": "Red"
+    }, {
+        "Label": "Alive",
+        "Color": "Green"
+    }])
 
     server = mesa.visualization.ModularServer(traffic.Intersection, [canvas_element], "Intersection", {
         'layers': tiled_layers, 
@@ -76,6 +94,7 @@ else:
     print([b['Crashed'] for b in br])
     print([b['Spawned'] for b in br])
     print([b['Despawned'] for b in br])
+    print([b['Alive'] for b in br])
 
 
 # %%

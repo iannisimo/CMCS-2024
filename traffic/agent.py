@@ -1,4 +1,4 @@
-from mesa import Agent
+from mesa import Agent, Model
 from enum import Enum
 from random import choice, random
 import numpy as np
@@ -150,12 +150,12 @@ class Car(Agent):
     
     @property
     def time_to_stop(self):
-        return - (self.speed + ACCELERATION) / DECELERATION
+        return - (self.speed) / DECELERATION
 
     @property
     def safe_distance(self):
         # Get the distance needed to stop given the current speed and the DECELERATION rate
-        delta_s = ((self.speed + ACCELERATION) * self.time_to_stop) + 0.5 * DECELERATION * (self.time_to_stop ** 2)
+        delta_s = ((self.speed) * self.time_to_stop) + 0.5 * DECELERATION * (self.time_to_stop ** 2)
         return delta_s
     
     def car_at(self, pos):
@@ -269,11 +269,7 @@ class Car(Agent):
         if self.dlocked > DEADLOCK_PATIENCE and ret == False:
             if random() < 1/8:
                 ret = True
-                # TODO: remove
-                self.speed = 1
-                self.state = State.ACCELERATING
-                # TODO: end
-                print(f'I am {self.color} - {self.intent} and i choose so go.')
+                # print(f'I am {self.color} - {self.intent} and i choose so go.')
         return ret
 
     
@@ -290,6 +286,10 @@ class Car(Agent):
         return (int(tuple[0]), int(tuple[1]))
 
     def move(self):
+        if self.obstacle_in_front(int((self.safe_distance + self.frac_move))):
+            self.state = State.DECELERATING
+        else:
+            self.state = State.ACCELERATING
         match self.state:
             case State.ACCELERATING:
                 self.speed += ACCELERATION
@@ -307,10 +307,6 @@ class Car(Agent):
                 self.speed = 0
         if not self.agent_checks():
             return
-        if self.obstacle_in_front(int((self.safe_distance + self.frac_move))):
-            self.state = State.DECELERATING
-        else:
-            self.state = State.ACCELERATING
 
         self.frac_move += self.speed
         moves = int(self.frac_move / CELL_LENGTH)
@@ -378,6 +374,17 @@ class SelfDestructAgent(Agent):
     def step(self):
         self.model.grid.remove_agent(self)
         self.model.schedule.remove(self)
+
+    def advance(self):
+        pass
+
+class InfoAgent(Agent):
+
+    def __init__(self, unique_id: int, model: Model) -> None:
+        super().__init__(unique_id, model)
+    
+    def step(self):
+        pass
 
     def advance(self):
         pass
