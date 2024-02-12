@@ -29,8 +29,9 @@ class InColor(Color):
 # Stop signal
     # When crossing, stop and find the related ruleset
 class StColor(Color):
-    STOP_4_ISECTION = 'ff8800'
-    STOP_4_TLIGHT = 'ff8900'
+    STOP_4_ISECTION     = 'ff8800'
+    STOP_4_TLIGHT       = 'ff8900'
+    STOP_4_RBOUT        = 'ff8a00'
 
 class TLColor(Color):
     RED = 'ff0000'
@@ -42,6 +43,7 @@ class TLColor(Color):
 class OrColor(Color):
     ORIGIN_4_ISECTION   = 'ff88ff'
     ORIGIN_1_OUT        = 'ff89ff'
+    ORIGIN_4_RBOUT      = 'ff8aff'
     ORIGIN_1_IN         = 'ff90ff'
 
 

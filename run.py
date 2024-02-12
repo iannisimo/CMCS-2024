@@ -13,6 +13,7 @@ dlocks = traffic.get_dlocks(traffic.xcf2np('GRIDS/Deadlocks.xcf'))
 _4WayI = traffic.utils.xcf2np('GRIDS/4WayI.xcf')
 _1Way = traffic.utils.xcf2np('GRIDS/1Way.xcf')
 _4WayTL = traffic.utils.xcf2np('GRIDS/4WayTL.xcf')
+_4WayR = traffic.xcf2np('GRIDS/4WayR.xcf')
 
 
 
@@ -50,9 +51,13 @@ map = np.array(test_map, dtype=object)
 
 # map = city.city_planner(3, 3, 0)
 tiles = {
-    '1111i': _4WayTL,
+    '1111i': _4WayI,
+    '1111t': _4WayTL,
+    '1111r': _4WayR,
     '0100a': _1Way
 }
+
+# R 1180 450
 
 tiled_layers = city.generate_city(map, tiles)
 

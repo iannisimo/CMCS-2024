@@ -214,11 +214,25 @@ def generate_city(city, tiles: dict):
 
     tile_w = list(tiles.values())[0]['BG'].shape[0]
     tile_h = list(tiles.values())[0]['BG'].shape[1]
+    keys = list(tiles.values())[0]
     city_with_tiles_w = city.shape[0] * tile_w
     city_with_tiles_h = city.shape[1] * tile_h
 
 
-    tiles['0000a'] = {layer_key: np.full((tile_w, tile_h), '000000') for layer_key in list(list(tiles.values())[0].keys())}
+    tiles['0000a'] = {layer_key: np.full((tile_w, tile_h), '000000') for layer_key in keys}
+
+    full_city = {key: np.full((city_with_tiles_w, city_with_tiles_h), '000000') for key in keys}
+    for i in range(city.shape[0]):
+        for j in range(city.shape[1]):
+            city_tile = city[i, j]
+            matching_tiles = [key for key in tiles.keys() if key[:4] == city_tile]
+            choosen_tile_key = random.choice(matching_tiles)
+            choosen_tile = tiles[choosen_tile_key]
+            for key in keys:
+                base_i, base_j = i*tile_w, j*tile_h
+                full_city[key][base_i:base_i+tile_w, base_j:base_j+tile_h] = choosen_tile[key]
+    print(full_city)
+    return full_city
 
     for layer in list(list(tiles.values())[0].keys()):
         if 'RULE' in layer:
