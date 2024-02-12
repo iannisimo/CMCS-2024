@@ -4,6 +4,12 @@ import traffic
 import numpy as np
 from gimpformats.gimpXcfDocument import GimpDocument
 
+class RelativeDirection(Enum):
+    UP = 3
+    RIGHT = 2
+    DOWN = 1
+    LEFT = 0
+
 class Color(Enum):
     pass
 
@@ -12,6 +18,7 @@ class BGColor(Color):
     EMPTY = '000000'
     ROAD = '010101'
     CAR = '000000'
+    WHITE = 'ffffff'
 
 # Interest points
 class InColor(Color):
@@ -135,8 +142,37 @@ def get_rules(rules: dict):
         i_points['give_right'] = i_points['rule'].str[5].apply(int, base=16) * give_right
         i_points['x'] = i_points['x'] - origin[0]
         i_points['y'] = i_points['y'] - origin[1]
-        ret[origin[2]] = i_points
+        ret[StColor(origin[2])] = i_points
     return ret
+
+def get_dlocks(dlocks: dict):
+    ret = {}
+    for dlock_name in dlocks:
+        dlock = dlocks[dlock_name]
+        d_points = []
+        origin = None
+        origin_xy = None
+        for x in range(len(dlock)):
+            for y in range(len(dlock[0])):
+                col = dlock[x][y]
+                if col == BGColor.EMPTY.value:
+                    continue
+                if col in [s.value for s in StColor]:
+                    origin = StColor(col)
+                    origin_xy = (x, y)
+                    continue
+                d_points += [(x, y)]
+        print(origin_xy)
+        ret[origin] = pd.DataFrame(d_points)
+        ret[origin].columns = ['x', 'y']
+        ret[origin]['x'] = ret[origin]['x'] - origin_xy[0]
+        ret[origin]['y'] = ret[origin]['y'] - origin_xy[1]
+    return ret
+
+# send an int which encodes the rule (0-f) and the intent the found car (relative to me)
+# returns true if it is not on my way
+def doYouKnowTheWay(rule: int, relative_intent: RelativeDirection) -> bool:
+    return rule & (1 << relative_intent.value) == 0
 
 def doINeedToGiveTheDuckingWay(rule: int, relative_real_direction: tuple) -> bool:
     U = 7
