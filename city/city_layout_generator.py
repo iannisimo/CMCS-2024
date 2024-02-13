@@ -86,12 +86,12 @@ def plot_city(city):
     plt.show()
 
 #TODO: add seed to the random values and different probabilities for the number of lanes
-def random_matching_tile(north, south, east, west, seed):
+def random_matching_tile(north, south, east, west, seed, max_lanes = 1):
     # Generate a random tile
     tile = ""
     for i in range(4):
 
-        tile += str(random.randint(0, 2))
+        tile += str(random.randint(0, max_lanes))
 
     #print(north, south, east, west)
 
@@ -99,19 +99,19 @@ def random_matching_tile(north, south, east, west, seed):
     if north is not None:
         tile = tile[:0] + north[1] + tile[1:]
     else:
-        tile = tile[:0] + str(random.randint(0, 2)) + tile[1:]
+        tile = tile[:0] + str(random.randint(0, max_lanes)) + tile[1:]
     if south is not None:
         tile = tile[:1] + south[0] + tile[2:]
     else:
-        tile = tile[:1] + str(random.randint(0, 2)) + tile[2:]
+        tile = tile[:1] + str(random.randint(0, max_lanes)) + tile[2:]
     if east is not None:
         tile = tile[:2] + east[3] + tile[3:]
     else:
-        tile = tile[:2] + str(random.randint(0, 2)) + tile[3:]
+        tile = tile[:2] + str(random.randint(0, max_lanes)) + tile[3:]
     if west is not None:
         tile = tile[:3] + west[2] + tile[4:]
     else:
-        tile = tile[:3] + str(random.randint(0, 2)) + tile[4:]
+        tile = tile[:3] + str(random.randint(0, max_lanes)) + tile[4:]
     
     return tile
 
@@ -209,6 +209,8 @@ def generate_city(city, tiles: dict):
 
     tiles = augment_tiles(tiles)
 
+    print(tiles.keys())
+
     tiled = {}
 
     tile_w = list(tiles.values())[0]['BG'].shape[0]
@@ -224,13 +226,13 @@ def generate_city(city, tiles: dict):
     for i in range(city.shape[0]):
         for j in range(city.shape[1]):
             city_tile = city[i, j]
+            print(city_tile)
             matching_tiles = [key for key in tiles.keys() if key[:4] == city_tile]
             choosen_tile_key = random.choice(matching_tiles)
             choosen_tile = tiles[choosen_tile_key]
             for key in keys:
                 base_i, base_j = i*tile_w, j*tile_h
                 full_city[key][base_i:base_i+tile_w, base_j:base_j+tile_h] = choosen_tile[key]
-    print(full_city)
     return full_city
 
     for layer in list(list(tiles.values())[0].keys()):

@@ -45,6 +45,12 @@ class OrColor(Color):
     ORIGIN_1_OUT        = 'ff89ff'
     ORIGIN_4_RBOUT      = 'ff8aff'
     ORIGIN_1_IN         = 'ff90ff'
+    ORIGIN_3_I_L        = 'ffa0ff'
+    ORIGIN_3_I_C        = 'ffa1ff'
+    ORIGIN_3_I_R        = 'ffa2ff'
+    ORIGIN_2_I          = 'ffb0ff'
+    ORIGIN_2_LL         = 'ffb1ff'
+    ORIGIN_2_LR         = 'ffb2ff'
 
 
 def data2np(data_file: str) -> np.ndarray:

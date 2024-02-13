@@ -55,7 +55,7 @@ def rotateIntent(intentD, direction):
             return traffic.RelativeDirection.UP
 
 CELL_LENGTH = 1
-MAX_SPEED = 1
+MAX_SPEED = 2
 ACCELERATION = .09
 DECELERATION = - 0.17
 
