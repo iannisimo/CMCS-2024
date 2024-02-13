@@ -1,5 +1,5 @@
 # %%
-GUI = True
+GUI = False
 
 import mesa
 import traffic
@@ -105,8 +105,9 @@ else:
             'dlocks': [dlocks],
             'city_layout': [map]
         },
-        iterations=1,
-        max_steps=1000,
+        iterations=2,
+        max_steps=4,
+        number_processes=None
     )
 
     print([b['Crashed'] for b in br])

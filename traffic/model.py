@@ -7,6 +7,12 @@ import numpy as np
 
 class Intersection(mesa.Model):
 
+    @staticmethod
+    def agents_stats(self):
+        return {
+            "speed": a.speed if type(a) == traffic.Car else -1
+        for a in self.agents}
+
     def __init__(self, layers: dict, rules: dict, trjs: dict, dlocks: dict, city_layout: np.array):
         super().__init__()
         w = list(layers.values())[0].shape[0]
@@ -16,9 +22,9 @@ class Intersection(mesa.Model):
             "Crashed": lambda m: m.crashed,
             "Spawned": lambda m: m.spawned,
             "Despawned": lambda m: m.despawned,
-            "Alive": lambda m: m.spawned - m.despawned
+            "Alive": lambda m: m.spawned - m.despawned,
+            "Agents": self.agents_stats
         })
-
 
         exits = ['0001', '0010', '0100', '1000']
         self.city_exits = [(i, j) for i, _ in enumerate(city_layout) for j, _ in enumerate(city_layout[i]) if city_layout[i][j] in exits]
