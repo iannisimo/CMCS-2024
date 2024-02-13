@@ -234,121 +234,106 @@ def generate_city(city, tiles: dict):
                 base_i, base_j = i*tile_w, j*tile_h
                 full_city[key][base_i:base_i+tile_w, base_j:base_j+tile_h] = choosen_tile[key]
     return full_city
-
-    for layer in list(list(tiles.values())[0].keys()):
-        if 'RULE' in layer:
-            continue
-        layer_tiles = np.empty((city_with_tiles_w, city_with_tiles_h), dtype=object)
-        for i in range(city_with_tiles_w):
-            for j in range(city_with_tiles_h):
-                matching_tiles = [key for key in tiles.keys() if key[:4] == city[int(i/tile_w)][int(j/tile_h)]]
-                layer_tiles[i][j] = tiles[random.choice(matching_tiles)][layer][i%tile_w][j%tile_h]
-        tiled[layer] = layer_tiles
-
-            
-    return tiled
  
-def generate_adjacency_map(city):
-    adjacency_map = {}
-    for i in range(len(city)):
-        for j in range(len(city[0])):
-            if city[i][j] != '0000':
-                neighbors = []
-                if city[i][j][0] == '1':  # Check north connection
-                    if i > 0 and city[i-1][j][1] == '1':  # Check south connection of the neighbor
-                        neighbors.append((i-1, j))
-                
-                if city[i][j][1] == '1':
-                    if i < len(city)-1 and city[i+1][j][0] == '1':
-                        neighbors.append((i+1, j))
 
-                if city[i][j][2] == '1':
-                    if j < len(city[0])-1 and city[i][j+1][3] == '1':
-                        neighbors.append((i, j+1))
+class Pathfinder():
 
-                if city[i][j][3] == '1':
-                    if j > 0 and city[i][j-1][2] == '1':
-                        neighbors.append((i, j-1))
 
-                #print(i, j, neighbors)
-                adjacency_map[(i, j)] = neighbors
-                
-    return adjacency_map
+    def generate_adjacency_map(self, city):
+        adjacency_map = {}
+        for i in range(len(city)):
+            for j in range(len(city[0])):
+                if city[i][j] != '0000':
+                    neighbors = []
+                    if city[i][j][0] == '1':  # Check north connection
+                        if i > 0 and city[i-1][j][1] == '1':  # Check south connection of the neighbor
+                            neighbors.append((i-1, j))
+                    
+                    if city[i][j][1] == '1':
+                        if i < len(city)-1 and city[i+1][j][0] == '1':
+                            neighbors.append((i+1, j))
 
-def heuristic(node, target):
-    # Calculate the Manhattan distance between two nodes
-    return abs(node[0] - target[0]) + abs(node[1] - target[1])
+                    if city[i][j][2] == '1':
+                        if j < len(city[0])-1 and city[i][j+1][3] == '1':
+                            neighbors.append((i, j+1))
 
-def a_star(adjacency_map, start, target):
-    # Create empty sets for open and closed nodes
-    open_set = set()
-    closed_set = set()
-    # Create a dictionary to store the parent of each node
-    parent = {}
-    # Create a dictionary to store the cost from start to each node
-    g_score = {node: float('inf') for node in adjacency_map}
-    g_score[start] = 0
-    # Create a dictionary to store the total cost of each node
-    f_score = {node: float('inf') for node in adjacency_map}
-    f_score[start] = heuristic(start, target)
+                    if city[i][j][3] == '1':
+                        if j > 0 and city[i][j-1][2] == '1':
+                            neighbors.append((i, j-1))
 
-    #check if the start and target are in the adjacency map
-    if start not in adjacency_map or target not in adjacency_map:
+                    #print(i, j, neighbors)
+                    adjacency_map[(i, j)] = neighbors
+                    
+        return adjacency_map
+
+    def heuristic(self, node, target):
+        # Calculate the Manhattan distance between two nodes
+        return abs(node[0] - target[0]) + abs(node[1] - target[1])
+    
+    def random_min(self, lst, key=None):
+        min_items = [item for item in lst if item == min(lst, key=key)]
+        return random.choice(min_items)
+
+    def a_star(self, adjacency_map, start, target):
+        # Create empty sets for open and closed nodes
+        open_set = set()
+        closed_set = set()
+        # Create a dictionary to store the parent of each node
+        parent = {}
+        # Create a dictionary to store the cost from start to each node
+        g_score = {node: float('inf') for node in adjacency_map}
+        g_score[start] = 0
+        # Create a dictionary to store the total cost of each node
+        f_score = {node: float('inf') for node in adjacency_map}
+        f_score[start] = self.heuristic(start, target)
+
+        #check if the start and target are in the adjacency map
+        if start not in adjacency_map or target not in adjacency_map:
+            return []
+        
+        
+        # Add the start node to the open set
+        open_set.add(start)
+        while open_set:
+            # Find the node with the lowest f_score
+            current = self.random_min(open_set, key=lambda node: f_score[node])
+            # If the current node is the target, reconstruct the path and return it
+            if current == target:
+                path = []
+                while current in parent:
+                    path.append(current)
+                    current = parent[current]
+                path.append(start)
+                path.reverse()
+                return path
+            # Remove the current node from the open set and add it to the closed set
+            open_set.remove(current)
+            closed_set.add(current)
+            # Explore the neighbors of the current node
+            for neighbor in adjacency_map[current]:
+                # Calculate the tentative g_score for the neighbor
+                tentative_g_score = g_score[current] + 1
+                # If the neighbor is already in the closed set and the tentative g_score is higher, skip it
+                if neighbor in closed_set and tentative_g_score >= g_score[neighbor]:
+                    continue
+                # If the neighbor is not in the open set or the tentative g_score is lower, update the values
+                if neighbor not in open_set or tentative_g_score < g_score[neighbor]:
+                    parent[neighbor] = current
+                    g_score[neighbor] = tentative_g_score
+                    f_score[neighbor] = g_score[neighbor] + self.heuristic(neighbor, target)
+                    # Add the neighbor to the open set if it's not already there
+                    if neighbor not in open_set:
+                        open_set.add(neighbor)
+        # If the open set is empty and the target has not been found, return an empty path
         return []
-    
-    
-    # Add the start node to the open set
-    open_set.add(start)
-    while open_set:
-        # Find the node with the lowest f_score
-        current = min(open_set, key=lambda node: f_score[node])
-        # If the current node is the target, reconstruct the path and return it
-        if current == target:
-            path = []
-            while current in parent:
-                path.append(current)
-                current = parent[current]
-            path.append(start)
-            path.reverse()
-            return path
-        # Remove the current node from the open set and add it to the closed set
-        open_set.remove(current)
-        closed_set.add(current)
-        # Explore the neighbors of the current node
-        for neighbor in adjacency_map[current]:
-            # Calculate the tentative g_score for the neighbor
-            tentative_g_score = g_score[current] + 1
-            # If the neighbor is already in the closed set and the tentative g_score is higher, skip it
-            if neighbor in closed_set and tentative_g_score >= g_score[neighbor]:
-                continue
-            # If the neighbor is not in the open set or the tentative g_score is lower, update the values
-            if neighbor not in open_set or tentative_g_score < g_score[neighbor]:
-                parent[neighbor] = current
-                g_score[neighbor] = tentative_g_score
-                f_score[neighbor] = g_score[neighbor] + heuristic(neighbor, target)
-                # Add the neighbor to the open set if it's not already there
-                if neighbor not in open_set:
-                    open_set.add(neighbor)
-    # If the open set is empty and the target has not been found, return an empty path
-    return []
 
+    def __init__(self, city_layout):
+        self.adj_map = self.generate_adjacency_map(city_layout)
 
-
-test_map = [
-    ['0000', '0100', '0100', '0100', '0000'],
-    ['0010', '1111', '1011', '1111', '0001'],
-    ['0010', '1101', '0000', '1110', '0001'],
-    ['0010', '1111', '0111', '1111', '0001'],
-    ['0000', '1000', '1000', '1000', '0000']
-]
-
-
-
-ad_map = generate_adjacency_map(test_map)
-
-
-start = (1, 0)
-target = (3, 4)
-path = a_star(ad_map, start, target)
-print("Path:", path)
-
+    def get_path(self, from_where, to_where):
+        # print(f'Choosen exit: {to_where} from {from_where}')
+        path = self.a_star(self.adj_map, from_where, to_where)
+        relative_path = [(path[i-1][0] - path[i][0], path[i][1] - path[i-1][1]) for i in range(1, len(path))]
+        relative_path += [relative_path[-1]]
+        relative_path = [relative_path[0]] + relative_path
+        return relative_path
