@@ -97,11 +97,9 @@ class State(Enum):
 
 class Car(Agent):
     def __init__(self, pos, model):
-        super().__init__(pos, model)
+        super().__init__(model.next_uid(), model)
         self.color = traffic.randomRGB()
         self.type = traffic.BGColor.CAR
-
-        self.id = self.model.next_uid()
         
         self.pos = pos
         self.next_direction = self.getInitialHeading()
@@ -121,14 +119,15 @@ class Car(Agent):
         self.dlocked = 0
         self.last_dlock = None
 
-        path, exit = self.model.get_path(self.pos)
+        path, _ = self.model.get_path(self.pos)
         self.intents = [rotatePath(path[i-1], path[i]) for i in range(1, len(path))]
 
-        self.start = {
-            'intents': self.intents.copy(),
-            'start_pos': self.pos,
-            'exit': exit
-        }
+        self.mean_speed = 0
+
+        self.total_steps = 0
+
+    def add_to_mean(self, old_mean, new_val):
+        return ((self.total_steps - 1) / self.total_steps) * old_mean + (new_val / self.total_steps)
 
     def newIntent(self):
         # return choice([Intent.STRAIGHT, Intent.LEFT, Intent.RIGHT])
@@ -305,9 +304,14 @@ class Car(Agent):
         return traffic.StColor in [type(x.type) for x in self.getCell(self.pos)]
 
     def step(self):
+        self.total_steps += 1
         if not self.pos:
             return
         self.move()
+        self.mean_speed = self.add_to_mean(self.mean_speed, self.speed)
+        if self.total_steps > 10: 
+            self.model.grid.remove_agent(self)
+            self.model.schedule.remove(self)
 
     def to_int(self, tuple):
         return (int(tuple[0]), int(tuple[1]))
@@ -373,7 +377,7 @@ class StaticAgent(Agent):
 class SpawnAgent(Agent):
 
     def __init__(self, pos, model):
-        super().__init__(pos, model)
+        super().__init__(model.next_uid(), model)
         self.pos = pos
         self.type = traffic.InColor.SPAWN
 
@@ -407,7 +411,7 @@ class SelfDestructAgent(Agent):
 
 class TrafficLightController(Agent):
     def __init__(self, pos, model):
-        super().__init__(pos, model)
+        super().__init__(model.next_uid(), model)
         self.pos = pos
         self.type = traffic.InColor.TRAFFIC_LIGHT
         self.state = False
@@ -462,7 +466,7 @@ class InfoAgent(Agent):
     
 class MaxVerstappen(Car):
     def __init__(self, pos, model):
-        super().__init__(pos, model)
+        super().__init__(model.next_uid(), model)
 
     @property
     def speed(self):

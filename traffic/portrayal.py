@@ -77,7 +77,7 @@ def portrayCell(cell):
                 "y": cell.pos[1],
                 "r": 1.5,
                 "Color": f"#{cell.color}",
-                "ID": cell.id
+                "ID": cell.unique_id
             }
     elif type(cell) == traffic.TrafficLightController:
         return {

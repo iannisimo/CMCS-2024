@@ -105,8 +105,8 @@ else:
             'dlocks': [dlocks],
             'city_layout': [map]
         },
-        iterations=2,
-        max_steps=4,
+        iterations=1,
+        max_steps=100,
         number_processes=None
     )
 
