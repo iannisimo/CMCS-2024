@@ -15,7 +15,8 @@ _1Way       = traffic.utils.xcf2np('GRIDS/1Way.xcf')
 _4WayTL     = traffic.utils.xcf2np('GRIDS/4WayTL.xcf')
 _4WayR      = traffic.xcf2np('GRIDS/4WayR.xcf')
 _3WayI      = traffic.xcf2np('GRIDS/3WayI.xcf')
-_3WayTL     = traffic.xcf2np('GRIDS/3WayTL.xcf') 
+_3WayTL     = traffic.xcf2np('GRIDS/3WayTL.xcf')
+_3WayR      = traffic.xcf2np('GRIDS/3WayR.xcf') 
 _2WayI      = traffic.xcf2np('GRIDS/2WayI.xcf')
 _2WayL      = traffic.xcf2np('GRIDS/2WayL.xcf')
 
@@ -42,17 +43,23 @@ test_map = [
 #     ['0010', '1111', '0001'],
 #     ['0000', '1000', '0000'],
 # ]
-test_map = [
+# test_map = [
 #     ['0000', '0000', '0000'],
-    ['0010', '0111', '0001'],
-    ['0000', '1000', '0000'],
-]
+#     ['0010', '0111', '0001'],
+#     ['0000', '1000', '0000'],
+# ]
 # test_map = [
 #     ['0000', '0000', '0000', '0000'],
 #     ['0000', '1111', '1111', '0000'],
 #     ['0010', '1111', '1111', '0000'],
 #     ['0000', '0000', '0000', '0000']
 # ]
+
+test_map = [
+    ['0010', '0011', '0011', '0011', '0011', '0111'],
+    ['0000', '0000', '0000', '0000', '0000', '1000']
+]
+
 map = np.array(test_map, dtype=object)
 
 # map = city.city_planner(5, 5, 1)
@@ -61,8 +68,9 @@ tiles = {
     '1111t': _4WayTL,
     '1111r': _4WayR,
     '0100a': _1Way,
-    '0111i': _3WayI,
+    # '0111i': _3WayI,
     '0111t': _3WayTL,
+    # '0111r': _3WayR,
     '0011i': _2WayI,
     '0101i': _2WayL 
 }

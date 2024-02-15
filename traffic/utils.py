@@ -20,6 +20,7 @@ class BGColor(Color):
     CAR = '000000'
     WHITE = 'ffffff'
 
+
 # Interest points
 class InColor(Color):
     SPAWN = '0000ff'

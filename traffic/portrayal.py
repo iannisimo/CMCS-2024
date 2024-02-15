@@ -66,7 +66,8 @@ def portrayCell(cell):
                 'heading_x': cell.intentD[0],
                 'heading_y': cell.intentD[1],
                 "Color": f"#{cell.color}",
-                "ID": cell.id
+                "ID": cell.id,
+                "POS": (int(cell.pos[0]), int(cell.pos[1]))
             }
         else:
             return {
@@ -77,7 +78,8 @@ def portrayCell(cell):
                 "y": cell.pos[1],
                 "r": 1.5,
                 "Color": f"#{cell.color}",
-                "ID": cell.id
+                "ID": cell.id,
+                "POS": (int(cell.pos[0]), int(cell.pos[1]))
             }
     elif type(cell) == traffic.TrafficLightController:
         return {

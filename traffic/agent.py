@@ -65,7 +65,7 @@ def rotatePath(path_i_0, path_i_1):
 
 
 CELL_LENGTH = 1
-MAX_SPEED = 2
+MAX_SPEED = 2.5
 ACCELERATION = .09
 DECELERATION = - 0.17
 
@@ -169,12 +169,12 @@ class Car(Agent):
     
     @property
     def time_to_stop(self):
-        return - (self.speed) / DECELERATION
+        return - (self.speed + ACCELERATION) / DECELERATION
 
     @property
     def safe_distance(self):
         # Get the distance needed to stop given the current speed and the DECELERATION rate
-        delta_s = ((self.speed) * self.time_to_stop) + 0.5 * DECELERATION * (self.time_to_stop ** 2)
+        delta_s = ((self.speed + ACCELERATION) * self.time_to_stop) + 0.5 * DECELERATION * (self.time_to_stop ** 2)
         return delta_s
     
     def car_at(self, pos):
@@ -211,10 +211,12 @@ class Car(Agent):
         for i in range(0, up_to + 1):
             if i < traj_len:
                 pos = (origin[0] + traj[i][0], origin[1] + traj[i][1])
+                # print(f'{self.id}\t+{pos}')
             else:
                 pos = (
                     origin[0] + (traj[traj_len - 1][0]) + (i - traj_len + 1) * self.real_direction[0], 
                     origin[1] + (traj[traj_len - 1][1]) + (i - traj_len + 1) * self.real_direction[1])
+                # print(f'{self.id}\t-{pos}')
             if self.obstacle_at(pos, i == up_to):
                 return True
         return False
