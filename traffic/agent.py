@@ -8,6 +8,7 @@ from copy import copy as deepcopy
 from math import ceil
 
 
+
 def rotate(vector, direction):
     if direction == (0,1):             # up.
         return np.dot(np.array([[0,1],[-1,0]]), vector)
@@ -105,6 +106,9 @@ class Car(Agent):
         self.type = traffic.BGColor.CAR
 
         self.id = self.model.next_uid()
+
+        self.cell_travelled = 0
+        self.alive_time = 0
         
         self.pos = pos
         self.next_direction = self.getInitialHeading()
@@ -350,6 +354,7 @@ class Car(Agent):
     def step(self):
         if not self.pos:
             return
+        self.alive_time += 1
         self.move()
         self.history[self.pos] = deepcopy(self)
 
@@ -405,6 +410,8 @@ class Car(Agent):
                 del self.trajectory[0]
             else:
                 next_pos = (next_pos[0] + self.real_direction[0], next_pos[1] + self.real_direction[1])
+
+            self.cell_travelled += 1
         self.model.grid.move_agent(self, next_pos)
         self.pos = next_pos
 

@@ -12,13 +12,15 @@ class Intersection(mesa.Model):
         w = list(layers.values())[0].shape[0]
         h = list(layers.values())[0].shape[1]
 
+        self.dc = traffic.data_collection.collector(self)
+
         self.datacollector = mesa.DataCollector(model_reporters={
             "Crashed": lambda m: m.crashed,
             "Spawned": lambda m: m.spawned,
             "Despawned": lambda m: m.despawned,
             "Alive": lambda m: m.spawned - m.despawned,
-            "Steps": lambda m: m.steps
-
+            "Steps": lambda m: m.steps,
+            "Agents": lambda _: self.dc.collect_data() 
         })
 
 
