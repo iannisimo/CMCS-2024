@@ -1,9 +1,10 @@
 # %%
-GUI = True
+GUI = False
 
 import mesa
 import traffic
 import city
+import traffic.data_collection as data_collection
 
 import numpy as np
 
@@ -121,8 +122,11 @@ else:
             'city_layout': [map]
         },
         iterations=1,
-        max_steps=1000,
+        max_steps=10,
     )
+
+
+
 
     print([b['Crashed'] for b in br])
     print([b['Spawned'] for b in br])
