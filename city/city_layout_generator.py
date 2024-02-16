@@ -165,7 +165,8 @@ def city_planner(width, depth, seed):
     #fill the rest of the city
     for i in range(1,depth-1):
         for j in range(1,width-1):
-            city[i][j] = random_matching_tile(city[i-1][j], city[i+1][j], city[i][j+1], city[i][j-1],seed)
+            if city[i][j] is None:
+                city[i][j] = random_matching_tile(city[i-1][j], city[i+1][j], city[i][j+1], city[i][j-1],seed)
 
     # Create a visited matrix to keep track of visited cells
     visited = np.zeros((depth, width), dtype=bool)

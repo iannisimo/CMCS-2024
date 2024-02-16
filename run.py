@@ -1,5 +1,5 @@
 # %%
-GUI = False
+GUI = True
 
 import mesa
 import traffic
@@ -76,7 +76,7 @@ test_map = [
 
 map = np.array(test_map, dtype=object)
 
-map = city.city_planner(15, 15, 1)
+map = city.city_planner(5, 5, 1)
 tiles = {
     '1111i': _4WayI,
     '1111t': _4WayTL,
@@ -145,6 +145,8 @@ else:
     print([b['Spawned'] for b in br])
     print([b['Despawned'] for b in br])
     print([b['Alive'] for b in br])
+    from pprint import pprint
+    pprint(([b['Agents'] for b in br]))
 
 
 # %%

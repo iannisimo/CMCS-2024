@@ -212,3 +212,5 @@ def doINeedToGiveTheDuckingWay(rule: int, relative_real_direction: tuple) -> boo
     elif relative_real_direction == (-1, -1):
         return rule & (1 << UL) != 0
     
+def tupleInt(t: tuple) -> tuple:
+    return tuple([int(x) for x in t])

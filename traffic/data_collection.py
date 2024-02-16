@@ -15,6 +15,7 @@ class collector():
         
     def collect_data(self):
         for agent in self.model.agents:
+            if not agent.pos: continue
             if type(agent) == traffic.Car:
                 
                 if agent.id not in self.data:
@@ -27,8 +28,8 @@ class collector():
                     }
                 else:
                     self.data[agent.id]["speed"].append(round(agent.speed, 2))
-                    self.data[agent.id]["acceleration"].append(agent.state)
-                    self.data[agent.id]["position"].append(agent.pos)
+                    self.data[agent.id]["acceleration"].append(agent.state.value)
+                    self.data[agent.id]["position"].append(traffic.tupleInt(agent.pos))
                     self.data[agent.id]["cell_travelled"] = agent.cell_travelled
                     self.data[agent.id]["alive_time"] = agent.alive_time    
         return self.data

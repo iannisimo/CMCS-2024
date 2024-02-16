@@ -240,7 +240,7 @@ class Car(Agent):
         traj_len = len(self.trajectory)
         traj = self.trajectory if traj_len > 0 else [(0, 0)]
         origin = self.origin_point if traj_len > 0 else self.pos
-        self.next_up_to = int(up_to + 1 + (self.speed))
+        self.next_up_to = int(up_to + 1 + (self.next_speed))
         end_direction = self.real_direction
         if len(traj) > 2:
             end_direction = (traj[-1][0] - traj[-2][0], traj[-1][1] - traj[-2][1])

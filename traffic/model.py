@@ -1,8 +1,6 @@
 import mesa
 from city import Pathfinder
-import pandas as pd
 import traffic
-from enum import Enum
 import numpy as np
 
 class Intersection(mesa.Model):
@@ -12,7 +10,7 @@ class Intersection(mesa.Model):
         w = list(layers.values())[0].shape[0]
         h = list(layers.values())[0].shape[1]
 
-        self.dc = traffic.data_collection.collector(self)
+        self.dc = traffic.collector(self)
 
         self.datacollector = mesa.DataCollector(model_reporters={
             "Crashed": lambda m: m.crashed,
