@@ -75,7 +75,7 @@ test_map = [
 
 map = np.array(test_map, dtype=object)
 
-map = city.city_planner(10, 15, 1)
+map = city.city_planner(15, 15, 1)
 tiles = {
     '1111i': _4WayI,
     '1111t': _4WayTL,
@@ -98,7 +98,7 @@ if GUI:
 
     SCALE_MULTIPLE = 10
 
-    canvas_element = mesa.visualization.CanvasGrid(traffic.portrayCell, w, h, w*SCALE_MULTIPLE, h*SCALE_MULTIPLE)
+    canvas_element = traffic.CanvasGridS(traffic.portrayCell, w, h, w*SCALE_MULTIPLE, h*SCALE_MULTIPLE)
     chart = mesa.visualization.ChartModule([{
         "Label": "Spawned",
         "Color": "Blue"

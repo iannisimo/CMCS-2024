@@ -45,14 +45,14 @@ def portrayCell(cell):
             "w": 1,
             "h": 1,
             "Filled": "true",
-            "Layer": 10,
+            "Layer": -1,
             "x": cell.pos[0],
             "y": cell.pos[1],
             "Color": f"#{cell.type.value}",
         }
         if cell.type == traffic.BGColor.ROAD:
-            return
-            ret['Layer'] = 0
+            # return
+            ret['Layer'] = -5
         return ret
     elif type(cell) in [traffic.Car, traffic.agent.MaxVerstappen]:
         # print(cell.intent, cell.intentD)
@@ -90,7 +90,7 @@ def portrayCell(cell):
             "Filled": "true",
             "x": cell.pos[0],
             "y": cell.pos[1],
-            "Layer": 10,
+            "Layer": -1,
             "Color": f"#00ffff",
         }
     

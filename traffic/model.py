@@ -44,10 +44,6 @@ class Intersection(mesa.Model):
 
         self.steps = 0
 
-        sheep = traffic.BackgroundAgent((self.grid.width // 2, self.grid.height // 2), self, 'resources/sheep.png', 170)
-        self.grid.place_agent(sheep, (self.grid.width // 2, self.grid.height // 2))
-
-
         for i in range(3):
             for j in range(3):
                 self.grid.place_agent(traffic.InfoAgent(0, self), (i, j))
@@ -55,7 +51,6 @@ class Intersection(mesa.Model):
         for x in range(w):
             for y in range(h):
                 for k in layers.keys():
-                    print(k)
                     cell_val = layers[k][x][y]
                     if cell_val == traffic.BGColor.EMPTY.value:
                         continue
@@ -75,33 +70,12 @@ class Intersection(mesa.Model):
                     elif cell_val in [s.value for s in traffic.StColor]:
                         static = traffic.StaticAgent((x,y), self, traffic.StColor(cell_val))
                         self.grid.place_agent(static, (x,y))
-                        # static_car = traffic.Car((x,y), self)
-                        # self.grid.place_agent(static_car, (x,y))
                     
                     elif cell_val == traffic.InColor.TRAFFIC_LIGHT.value:
                         tlController = traffic.TrafficLightController((x,y), self)
                         self.grid.place_agent(tlController, (x,y))
                         self.schedule.add(tlController)
                     
-
-                # for k in prop_layers.keys():
-                #     cell_val = prop_layers[k].data[x][y]
-                #     if cell_val == traffic.CellColor.EMPTY:
-                #         continue
-                #     elif cell_val == traffic.CellColor.SPAWN:
-                #         spawn_agent = traffic.SpawnAgent((x,y), self)
-                #         self.grid.place_agent(spawn_agent, (x,y))
-                #         self.schedule.add(spawn_agent)
-                #     else:
-                #         if cell_val in [
-                #             traffic.CellColor.EMPTY,
-                #             traffic.CellColor.WALL,
-                #             traffic.CellColor.ROAD
-                #             ]:
-                #             continue
-                #         static_agent = traffic.StaticAgent((x,y), self, traffic.CellColor(cell_val))
-                #         self.grid.place_agent(static_agent, (x,y))
-        
         self.running = True
 
     def next_uid(self):
