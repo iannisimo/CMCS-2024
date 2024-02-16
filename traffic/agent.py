@@ -4,6 +4,8 @@ from random import choice, random
 import numpy as np
 import pandas as pd
 import traffic
+from copy import copy as deepcopy
+from math import ceil
 
 
 def rotate(vector, direction):
@@ -94,6 +96,7 @@ class State(Enum):
     DECELERATING = 2
     CRUISING = 3
     STOPPED = 4
+    SLOW_CRUISING = 5
 
 class Car(Agent):
     def __init__(self, pos, model):
@@ -130,6 +133,11 @@ class Car(Agent):
             'exit': exit
         }
 
+        self.history = {}
+
+        self.next_obstacle = None
+        self.next_up_to = 0
+
     def newIntent(self):
         # return choice([Intent.STRAIGHT, Intent.LEFT, Intent.RIGHT])
         return self.intents.pop(0)
@@ -161,20 +169,40 @@ class Car(Agent):
 
     def check_type_under_me(self, type_to_check):
         cell = self.getCell(self.pos)
-        cell_types = [type(x.type) for x in cell]
-        filtered_to_type = [x for x in cell if type(x.type) == type_to_check]
+        filtered_to_type = [x for x in cell if type(x) == type_to_check]
         if len(filtered_to_type) > 0:
             return filtered_to_type[0]
         return None
     
+    def findTombstone(self, pos):
+        cell = self.getCell(pos)
+        cell_types = [x.type for x in cell]
+        filtered = [x for x in cell if x.type == traffic.BGColor.TOMBSTONE]
+        if len(filtered) > 0:
+            return filtered[0]
+        return None
+
+    @property
+    def next_speed(self):
+        if self.state == State.ACCELERATING:
+            return self.speed + ACCELERATION
+        elif self.state == State.DECELERATING:
+            return self.speed
+        elif self.state == State.CRUISING:
+            return MAX_SPEED
+        elif self.state == State.STOPPED:
+            return 0
+        elif self.state == State.SLOW_CRUISING:
+            return self.speed
+    
     @property
     def time_to_stop(self):
-        return - (self.speed + ACCELERATION) / DECELERATION
+        return - (self.speed) / DECELERATION
 
     @property
     def safe_distance(self):
         # Get the distance needed to stop given the current speed and the DECELERATION rate
-        delta_s = ((self.speed + ACCELERATION) * self.time_to_stop) + 0.5 * DECELERATION * (self.time_to_stop ** 2)
+        delta_s = ((self.speed) * self.time_to_stop) + 0.5 * DECELERATION * (self.time_to_stop ** 2)
         return delta_s
     
     def car_at(self, pos):
@@ -208,18 +236,22 @@ class Car(Agent):
         traj_len = len(self.trajectory)
         traj = self.trajectory if traj_len > 0 else [(0, 0)]
         origin = self.origin_point if traj_len > 0 else self.pos
-        for i in range(0, up_to + 1):
+        self.next_up_to = int(up_to + 1 + (self.speed))
+        end_direction = self.real_direction
+        if len(traj) > 2:
+            end_direction = (traj[-1][0] - traj[-2][0], traj[-1][1] - traj[-2][1])
+        for i in range(0, self.next_up_to):
             if i < traj_len:
                 pos = (origin[0] + traj[i][0], origin[1] + traj[i][1])
                 # print(f'{self.id}\t+{pos}')
             else:
                 pos = (
-                    origin[0] + (traj[traj_len - 1][0]) + (i - traj_len + 1) * self.real_direction[0], 
-                    origin[1] + (traj[traj_len - 1][1]) + (i - traj_len + 1) * self.real_direction[1])
+                    origin[0] + (traj[traj_len - 1][0]) + (i - traj_len + 1) * end_direction[0], 
+                    origin[1] + (traj[traj_len - 1][1]) + (i - traj_len + 1) * end_direction[1])
                 # print(f'{self.id}\t-{pos}')
-            if self.obstacle_at(pos, i == up_to):
-                return True
-        return False
+            if self.obstacle_at(pos, i == self.next_up_to - 1):
+                return pos
+        return None
                 
 
     # Retrun false if needs to be removed
@@ -249,12 +281,20 @@ class Car(Agent):
         if traffic.BGColor.CAR in cell_types:
             for a in cell + [self]:
                 if a.type == traffic.BGColor.CAR:
+                    tb = self.check_type_under_me(TombstoneAgent)
+                    if tb:
+                        tb.deaths += 1
+                    else:
+                        tombstone = TombstoneAgent(a.pos, self.model)
+                        self.model.grid.place_agent(tombstone, a.pos)
                     self.model.grid.remove_agent(a)
                     self.model.schedule.remove(a)
                     self.model.crashed += 1
             return False
         
         return True
+
+    
     
     # return false if needs to stay in place
     def agent_checks(self):
@@ -306,19 +346,26 @@ class Car(Agent):
     def on_stop(self):
         return traffic.StColor in [type(x.type) for x in self.getCell(self.pos)]
 
+
     def step(self):
         if not self.pos:
             return
         self.move()
+        self.history[self.pos] = deepcopy(self)
 
     def to_int(self, tuple):
         return (int(tuple[0]), int(tuple[1]))
 
     def move(self):
-        if self.obstacle_in_front(int((self.safe_distance + self.frac_move))):
+        self.next_obstacle = self.obstacle_in_front(((self.safe_distance + self.frac_move)))
+        if self.next_obstacle:
             self.state = State.DECELERATING
         else:
             self.state = State.ACCELERATING
+            # if self.state == State.DECELERATING:
+            #     self.state = State.SLOW_CRUISING
+            # else:
+            #     self.state = State.ACCELERATING
         match self.state:
             case State.ACCELERATING:
                 self.speed += ACCELERATION
@@ -334,7 +381,10 @@ class Car(Agent):
                 self.speed = MAX_SPEED
             case State.STOPPED:
                 self.speed = 0
+            case State.SLOW_CRUISING:
+                pass
         if not self.agent_checks():
+            self.speed = 0
             return
 
         self.frac_move += self.speed
@@ -473,3 +523,10 @@ class MaxVerstappen(Car):
     @speed.setter
     def speed(self, value):
         pass
+
+class TombstoneAgent(Agent):
+    def __init__(self, pos, model):
+        super().__init__(pos, model)
+        self.pos = pos
+        self.type = traffic.BGColor.TOMBSTONE
+        self.deaths = 0

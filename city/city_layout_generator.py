@@ -141,7 +141,7 @@ def city_planner(width, depth, seed):
         return city
 
 
-    city = np.empty((width, depth), dtype=object)
+    city = np.empty((depth, width), dtype=object)
     for i in range(depth):
         for j in range(width):
             city[i][j] = None
@@ -209,7 +209,7 @@ def generate_city(city, tiles: dict):
 
     tiles = augment_tiles(tiles)
 
-    print(tiles.keys())
+    # print(tiles.keys())
 
     tiled = {}
 
@@ -226,7 +226,7 @@ def generate_city(city, tiles: dict):
     for i in range(city.shape[0]):
         for j in range(city.shape[1]):
             city_tile = city[i, j]
-            print(city_tile)
+            # print(city_tile)
             matching_tiles = [key for key in tiles.keys() if key[:4] == city_tile]
             choosen_tile_key = random.choice(matching_tiles)
             choosen_tile = tiles[choosen_tile_key]

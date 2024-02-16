@@ -19,6 +19,8 @@ class BGColor(Color):
     ROAD = '010101'
     CAR = '000000'
     WHITE = 'ffffff'
+    TOMBSTONE = 'ff0088'
+    IMAGE = ''
 
 
 # Interest points
@@ -60,7 +62,7 @@ def data2np(data_file: str) -> np.ndarray:
     """
     with open(data_file, 'r') as f:
         data = f.buffer.read()
-    print(len(data))
+    # print(len(data))
     grid = np.frombuffer(data, dtype=np.uint8).reshape((int(np.sqrt(len(data) / 3)), int(np.sqrt(len(data) / 3)), 3))
     grid_hex = np.array([[''.join(['%02x' % x for x in y]) for y in z] for z in grid])
 
@@ -172,7 +174,7 @@ def get_dlocks(dlocks: dict):
                     origin_xy = (x, y)
                     continue
                 d_points += [(x, y)]
-        print(origin_xy)
+        # print(origin_xy)
         ret[origin] = pd.DataFrame(d_points)
         ret[origin].columns = ['x', 'y']
         ret[origin]['x'] = ret[origin]['x'] - origin_xy[0]
@@ -209,4 +211,4 @@ def doINeedToGiveTheDuckingWay(rule: int, relative_real_direction: tuple) -> boo
         return rule & (1 << L) != 0
     elif relative_real_direction == (-1, -1):
         return rule & (1 << UL) != 0
-        
+    

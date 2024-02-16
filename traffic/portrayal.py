@@ -51,6 +51,7 @@ def portrayCell(cell):
             "Color": f"#{cell.type.value}",
         }
         if cell.type == traffic.BGColor.ROAD:
+            return
             ret['Layer'] = 0
         return ret
     elif type(cell) in [traffic.Car, traffic.agent.MaxVerstappen]:
@@ -118,3 +119,14 @@ def portrayCell(cell):
             for k in mv:
                 d[k] = mv[k][-1]
         return d
+    elif type(cell) == traffic.TombstoneAgent:
+        return {
+            "Shape": "circle",
+            "Filled": "true",
+            "Layer": 20,
+            "x": cell.pos[0],
+            "y": cell.pos[1],
+            "r": 1,
+            "Color": f"#{cell.type.value}",
+            "Deaths": cell.deaths
+        }

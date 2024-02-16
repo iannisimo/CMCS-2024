@@ -7,6 +7,7 @@ import city
 
 import numpy as np
 
+
 rules       = traffic.utils.get_rules(traffic.xcf2np('GRIDS/rules17Intent.xcf', with_alpha=True))
 trjs        = traffic.utils.get_traj(traffic.xcf2np('GRIDS/trj17.xcf'))
 dlocks      = traffic.get_dlocks(traffic.xcf2np('GRIDS/Deadlocks.xcf'))
@@ -55,22 +56,34 @@ test_map = [
 #     ['0000', '0000', '0000', '0000']
 # ]
 
+# test_map = [
+#     ['0010', '0011', '0011', '0011', '0011', '0111'],
+#     ['0000', '0000', '0000', '0000', '0000', '1000']
+# ]
+
 test_map = [
-    ['0010', '0011', '0011', '0011', '0011', '0111'],
-    ['0000', '0000', '0000', '0000', '0000', '1000']
+    ['0100', '0000'],
+    ['1100', '0000'],
+    ['1100', '0000'],
+    ['1100', '0000'],
+    ['1100', '0000'],
+    ['1100', '0000'],
+    ['1100', '0000'],
+    ['1100', '0000'],
+    ['1110', '0001']
 ]
 
 map = np.array(test_map, dtype=object)
 
-# map = city.city_planner(5, 5, 1)
+map = city.city_planner(10, 15, 1)
 tiles = {
     '1111i': _4WayI,
     '1111t': _4WayTL,
     '1111r': _4WayR,
     '0100a': _1Way,
-    # '0111i': _3WayI,
+    '0111i': _3WayI,
     '0111t': _3WayTL,
-    # '0111r': _3WayR,
+    '0111r': _3WayR,
     '0011i': _2WayI,
     '0101i': _2WayL 
 }
@@ -83,7 +96,7 @@ if GUI:
     w = list(tiled_layers.values())[0].shape[0]
     h = list(tiled_layers.values())[0].shape[1]
 
-    SCALE_MULTIPLE = 5
+    SCALE_MULTIPLE = 10
 
     canvas_element = mesa.visualization.CanvasGrid(traffic.portrayCell, w, h, w*SCALE_MULTIPLE, h*SCALE_MULTIPLE)
     chart = mesa.visualization.ChartModule([{

@@ -16,7 +16,9 @@ class Intersection(mesa.Model):
             "Crashed": lambda m: m.crashed,
             "Spawned": lambda m: m.spawned,
             "Despawned": lambda m: m.despawned,
-            "Alive": lambda m: m.spawned - m.despawned
+            "Alive": lambda m: m.spawned - m.despawned,
+            "Steps": lambda m: m.steps
+
         })
 
 
@@ -40,6 +42,11 @@ class Intersection(mesa.Model):
         self.spawned = 0
         self.despawned = 0
 
+        self.steps = 0
+
+        sheep = traffic.BackgroundAgent((self.grid.width // 2, self.grid.height // 2), self, 'resources/sheep.png', 170)
+        self.grid.place_agent(sheep, (self.grid.width // 2, self.grid.height // 2))
+
 
         for i in range(3):
             for j in range(3):
@@ -48,6 +55,7 @@ class Intersection(mesa.Model):
         for x in range(w):
             for y in range(h):
                 for k in layers.keys():
+                    print(k)
                     cell_val = layers[k][x][y]
                     if cell_val == traffic.BGColor.EMPTY.value:
                         continue
@@ -120,5 +128,6 @@ class Intersection(mesa.Model):
     def step(self) -> None:
         self.datacollector.collect(self)
         self.schedule.step()
+        self.steps += 1
 
     
