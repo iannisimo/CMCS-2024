@@ -53,6 +53,16 @@ def portrayCell(cell):
         if cell.type == traffic.BGColor.ROAD:
             # return
             ret['Layer'] = -5
+        if cell.type == traffic.InColor.DESPAWN:
+            ret = {
+                "Shape": 'circle',
+                "r": 3,
+                "Layer": -1,
+                "x": cell.pos[0] + 1,
+                "y": cell.pos[1] - 1,
+                "Color": f"#{cell.despawnColor}",
+                "Filled": "true",
+            }
         return ret
     elif type(cell) in [traffic.Car, traffic.agent.MaxVerstappen]:
         # print(cell.intent, cell.intentD)
@@ -108,6 +118,8 @@ def portrayCell(cell):
     elif type(cell) == traffic.InfoAgent:
         d = {
             "Shape": "rect",
+            "x": cell.pos[0],
+            "y": cell.pos[1],
             "w": 1,
             "h": 1,
             "Filled": "true",

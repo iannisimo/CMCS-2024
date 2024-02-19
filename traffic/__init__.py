@@ -4,6 +4,6 @@ from .agent import Car, StaticAgent, SpawnAgent, SelfDestructAgent, InfoAgent, T
 from .model import Intersection
 from .const import SPAWN
 from .CanvasGridVisualization import CanvasGridS
-from .portrayal import portrayCell, randomRGB
+from .portrayal import portrayCell, randomRGB, hsl2rgb
 from .tracking import addDNF, addDORKS
 from .data_collection import collector

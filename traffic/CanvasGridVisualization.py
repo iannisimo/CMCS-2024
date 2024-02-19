@@ -101,8 +101,10 @@ class CanvasGridS(VisualizationElement):
                 for obj in cell_objects:
                     portrayal = self.portrayal_method(obj)
                     if portrayal:
-                        portrayal["x"] = x
-                        portrayal["y"] = y
+                        # portrayal["x"] = x
+                        # portrayal["y"] = y
+                        portrayal["x"] = int(portrayal["x"])
+                        portrayal["y"] = int(portrayal["y"])
                         grid_state[portrayal["Layer"]].append(portrayal)
 
         return grid_state

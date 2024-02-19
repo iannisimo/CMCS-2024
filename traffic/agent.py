@@ -5,9 +5,8 @@ import numpy as np
 import pandas as pd
 import traffic
 from copy import copy as deepcopy
-from math import ceil
 
-
+DEBUG = False
 
 def rotate(vector, direction):
     if direction == (0,1):             # up.
@@ -102,7 +101,6 @@ class State(Enum):
 class Car(Agent):
     def __init__(self, pos, model):
         super().__init__(pos, model)
-        self.color = traffic.randomRGB()
         self.type = traffic.BGColor.CAR
 
         self.id = self.model.next_uid()
@@ -129,18 +127,20 @@ class Car(Agent):
         self.last_dlock = None
 
         path, exit = self.model.get_path(self.pos)
+        self.color = self.model.get_ecolor(exit)
         self.intents = [rotatePath(path[i-1], path[i]) for i in range(1, len(path))]
-
-        self.start = {
-            'intents': self.intents.copy(),
-            'start_pos': self.pos,
-            'exit': exit
-        }
-
-        self.history = {}
 
         self.next_obstacle = None
         self.next_up_to = 0
+
+        if DEBUG:
+            self.start = {
+                'intents': self.intents.copy(),
+                'start_pos': self.pos,
+                'exit': exit
+            }
+        
+            self.history = {}
 
     def newIntent(self):
         # return choice([Intent.STRAIGHT, Intent.LEFT, Intent.RIGHT])
@@ -356,7 +356,8 @@ class Car(Agent):
             return
         self.alive_time += 1
         self.move()
-        self.history[self.pos] = deepcopy(self)
+        if DEBUG:
+            self.history[self.pos] = deepcopy(self)
 
     def to_int(self, tuple):
         return (int(tuple[0]), int(tuple[1]))
@@ -422,6 +423,7 @@ class StaticAgent(Agent):
         super().__init__(pos, model)
         self.pos = pos
         self.type = type
+        self.despawnColor = 'ffffff'
     
     def step(self):
         pass

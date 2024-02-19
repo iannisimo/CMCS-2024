@@ -2,6 +2,8 @@ import mesa
 from city import Pathfinder
 import traffic
 import numpy as np
+from random import shuffle
+
 
 class Intersection(mesa.Model):
 
@@ -18,12 +20,16 @@ class Intersection(mesa.Model):
             "Despawned": lambda m: m.despawned,
             "Alive": lambda m: m.spawned - m.despawned,
             "Steps": lambda m: m.steps,
-            "Agents": lambda _: self.dc.collect_data() 
+            # "Agents": lambda _: self.dc.collect_data() 
         })
 
 
         exits = ['0001', '0010', '0100', '1000']
         self.city_exits = [(i, j) for i, _ in enumerate(city_layout) for j, _ in enumerate(city_layout[i]) if city_layout[i][j] in exits]
+        n_exits = len(self.city_exits)
+        colors = [traffic.hsl2rgb(int(360 / n_exits * i), 100, 50) for i in range(n_exits)]
+        shuffle(colors)
+        self.exit_colors = {self.city_exits[i]: colors[i] for i in range(n_exits)}
         self.pathfinder = Pathfinder(city_layout)
 
         self.schedule = mesa.time.RandomActivationByType(self)
@@ -59,6 +65,7 @@ class Intersection(mesa.Model):
                         self.grid.place_agent(static, (x,y))
                     elif cell_val == traffic.InColor.DESPAWN.value:
                         static = traffic.StaticAgent((x,y), self, traffic.InColor.DESPAWN)
+                        static.despawnColor = self.get_ecolor((int(x / 17), int(y / 17)))
                         self.grid.place_agent(static, (x,y))
                     elif cell_val == traffic.InColor.SPAWN.value:
                         spawn = traffic.SpawnAgent((x,y), self)
@@ -98,6 +105,9 @@ class Intersection(mesa.Model):
         if not exit:
             exit = self.pick_exit(pos)
         return self.pathfinder.get_path(pos, exit), exit
+    
+    def get_ecolor(self, pos):
+        return self.exit_colors[pos]
 
     def step(self) -> None:
         self.datacollector.collect(self)
