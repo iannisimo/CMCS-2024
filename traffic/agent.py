@@ -1,6 +1,5 @@
 from mesa import Agent, Model
 from enum import Enum
-from random import choice, random
 import numpy as np
 import pandas as pd
 import traffic
@@ -340,7 +339,7 @@ class Car(Agent):
                     if not iCanGo:
                         ret = False
         if self.dlocked > DEADLOCK_PATIENCE and ret == False:
-            if random() < 1/8:
+            if self.model.random.random() < 1/8:
                 ret = True
                 # print(f'I am {self.color} - {self.intent} and i choose so go.')
         return ret
@@ -352,6 +351,12 @@ class Car(Agent):
 
 
     def step(self):
+
+        for i in range(0, 25, 1):
+            self.speed = i / 10
+            print(f'{i}: {self.safe_distance}')
+        exit(0)
+
         if not self.pos:
             return
         self.alive_time += 1
@@ -440,7 +445,8 @@ class SpawnAgent(Agent):
 
     def step(self):
         # if self.model.already_spawned: return
-        if traffic.SPAWN():
+        # TODO: add rate
+        if self.model.random.random() < .3:
             self.model.already_spawned = True
             if Car not in [type(x) for x in self.model.grid[self.pos[0]][self.pos[1]]]:
                 car = Car(self.pos, self.model)

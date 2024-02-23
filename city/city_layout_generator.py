@@ -16,8 +16,6 @@
 
 
 import numpy as np
-import random
-import numpy as np
 import matplotlib.pyplot as plt
 
 def plot_city(city):
@@ -86,7 +84,7 @@ def plot_city(city):
     plt.show()
 
 #TODO: add seed to the random values and different probabilities for the number of lanes
-def random_matching_tile(north, south, east, west, seed, max_lanes = 1):
+def random_matching_tile(north, south, east, west, random, max_lanes = 1):
     # Generate a random tile
     tile = ""
     for i in range(4):
@@ -131,14 +129,14 @@ def depth_first_visit(city, i, j, visited):
     if city[i][j][3] == '1' or city[i][j][3] == '2':
         depth_first_visit(city, i, j-1, visited)
 
-def city_planner(width, depth, seed):
+def city_planner(width, depth, random):
 
-    if seed == 0:
-        #generate a city of 4 way intersections
-        city = np.full((depth, width), "1111", dtype=object)
-        #plot_city(city)
+    # if seed == 0:
+    #     #generate a city of 4 way intersections
+    #     city = np.full((depth, width), "1111", dtype=object)
+    #     #plot_city(city)
 
-        return city
+    #     return city
 
 
     city = np.empty((depth, width), dtype=object)
@@ -147,26 +145,26 @@ def city_planner(width, depth, seed):
             city[i][j] = None
 
     #fill the four corners 
-    city[0][0] = random_matching_tile("0000", "1000","0001","0000",seed)
-    city[0][width-1] = random_matching_tile("0000", "1000","0000","0010",seed)
-    city[depth-1][0] = random_matching_tile("0100", "0000","0001","0000",seed)
-    city[depth-1][width-1] = random_matching_tile("0100", "0000","0000","0010",seed)
+    city[0][0] = random_matching_tile("0000", "1000","0001","0000",random)
+    city[0][width-1] = random_matching_tile("0000", "1000","0000","0010",random)
+    city[depth-1][0] = random_matching_tile("0100", "0000","0001","0000",random)
+    city[depth-1][width-1] = random_matching_tile("0100", "0000","0000","0010",random)
 
     #fill the north and south borders with random random matching tiles
     for i in range(1,width-1):
-        city[0][i] = random_matching_tile("0000", None, "1111", "1111",seed)
-        city[depth-1][i] = random_matching_tile(None, "0000", "1111", "1111",seed)
+        city[0][i] = random_matching_tile("0000", None, "1111", "1111",random)
+        city[depth-1][i] = random_matching_tile(None, "0000", "1111", "1111",random)
 
     #fill the east and west borders with random random matching tiles
     for i in range(1,depth-1):
-        city[i][0] = random_matching_tile("1111", "1111", None, "0000",seed)
-        city[i][width-1] = random_matching_tile("1111", "1111", "0000", None,seed)
+        city[i][0] = random_matching_tile("1111", "1111", None, "0000",random)
+        city[i][width-1] = random_matching_tile("1111", "1111", "0000", None,random)
 
     #fill the rest of the city
     for i in range(1,depth-1):
         for j in range(1,width-1):
             if city[i][j] is None:
-                city[i][j] = random_matching_tile(city[i-1][j], city[i+1][j], city[i][j+1], city[i][j-1],seed)
+                city[i][j] = random_matching_tile(city[i-1][j], city[i+1][j], city[i][j+1], city[i][j-1],random)
 
     # Create a visited matrix to keep track of visited cells
     visited = np.zeros((depth, width), dtype=bool)
@@ -206,7 +204,7 @@ def augment_tiles(tiles: dict):
             ret[nsew + type] = {layer_key: np.rot90(val[layer_key], -i) for layer_key in val}
     return ret
 
-def generate_city(city, tiles: dict):
+def generate_city(city, tiles: dict, random):
 
     tiles = augment_tiles(tiles)
 
@@ -271,11 +269,11 @@ class Pathfinder():
         # Calculate the Manhattan distance between two nodes
         return abs(node[0] - target[0]) + abs(node[1] - target[1])
     
-    def random_min(self, lst, key=None):
+    def random_min(self, lst, random, key=None):
         min_items = [item for item in lst if item == min(lst, key=key)]
         return random.choice(min_items)
 
-    def a_star(self, adjacency_map, start, target):
+    def a_star(self, adjacency_map, start, target, random):
         # Create empty sets for open and closed nodes
         open_set = set()
         closed_set = set()
@@ -297,7 +295,7 @@ class Pathfinder():
         open_set.add(start)
         while open_set:
             # Find the node with the lowest f_score
-            current = self.random_min(open_set, key=lambda node: f_score[node])
+            current = self.random_min(open_set, random, key=lambda node: f_score[node])
             # If the current node is the target, reconstruct the path and return it
             if current == target:
                 path = []
@@ -331,9 +329,9 @@ class Pathfinder():
     def __init__(self, city_layout):
         self.adj_map = self.generate_adjacency_map(city_layout)
 
-    def get_path(self, from_where, to_where):
+    def get_path(self, from_where, to_where, random):
         # print(f'Choosen exit: {to_where} from {from_where}')
-        path = self.a_star(self.adj_map, from_where, to_where)
+        path = self.a_star(self.adj_map, from_where, to_where, random)
         relative_path = [(path[i-1][0] - path[i][0], path[i][1] - path[i-1][1]) for i in range(1, len(path))]
         relative_path += [relative_path[-1]]
         relative_path = [relative_path[0]] + relative_path

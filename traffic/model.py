@@ -2,15 +2,25 @@ import mesa
 from city import Pathfinder
 import traffic
 import numpy as np
-from random import shuffle
-
+import city
 
 class Intersection(mesa.Model):
 
-    def __init__(self, layers: dict, rules: dict, trjs: dict, dlocks: dict, city_layout: np.array):
-        super().__init__()
-        w = list(layers.values())[0].shape[0]
-        h = list(layers.values())[0].shape[1]
+    def __init__(self, seed=None, w_tiles = 5, h_tiles = 5):
+        super().__init__(seed=seed)
+
+        exits = ['0001', '0010', '0100', '1000']
+        for i in range(traffic.const.MAX_SEARCH):
+            map = city.city_planner(w_tiles, h_tiles, self.random)
+            c_layers = city.generate_city(map, traffic.const.TILES, self.random)
+            self.city_exits = [(i, j) for i, _ in enumerate(map) for j, _ in enumerate(map[i]) if map[i][j] in exits]
+            n_exits = len(self.city_exits)
+            if n_exits < 2:
+                break
+
+
+        w = list(c_layers.values())[0].shape[0]
+        h = list(c_layers.values())[0].shape[1]
 
         self.dc = traffic.collector(self)
 
@@ -24,21 +34,18 @@ class Intersection(mesa.Model):
         })
 
 
-        exits = ['0001', '0010', '0100', '1000']
-        self.city_exits = [(i, j) for i, _ in enumerate(city_layout) for j, _ in enumerate(city_layout[i]) if city_layout[i][j] in exits]
-        n_exits = len(self.city_exits)
         colors = [traffic.hsl2rgb(int(360 / n_exits * i), 100, 50) for i in range(n_exits)]
-        shuffle(colors)
+        self.random.shuffle(colors)
         self.exit_colors = {self.city_exits[i]: colors[i] for i in range(n_exits)}
-        self.pathfinder = Pathfinder(city_layout)
+        self.pathfinder = Pathfinder(map)
 
         self.schedule = mesa.time.RandomActivationByType(self)
 
         self.grid = mesa.space.MultiGrid(w, h, False)
 
-        self.rules = rules
-        self.trjs = trjs
-        self.dlocks = dlocks
+        self.rules = traffic.const.RULES
+        self.trjs = traffic.const.TRJS
+        self.dlocks = traffic.const.DLOCKS
 
         self.already_spawned = False
 
@@ -56,8 +63,8 @@ class Intersection(mesa.Model):
 
         for x in range(w):
             for y in range(h):
-                for k in layers.keys():
-                    cell_val = layers[k][x][y]
+                for k in c_layers.keys():
+                    cell_val = c_layers[k][x][y]
                     if cell_val == traffic.BGColor.EMPTY.value:
                         continue
                     elif cell_val == traffic.BGColor.ROAD.value:
@@ -96,15 +103,14 @@ class Intersection(mesa.Model):
         return None
     
     def pick_exit(self, pos):
-        from random import choice
-        return choice([e for e in self.city_exits if e != pos])
+        return self.random.choice([e for e in self.city_exits if e != pos])
     
     def get_path(self, pos, exit = None):
         # 17: tile_w/h
         pos = (int(pos[0] / 17), int(pos[1] / 17))
         if not exit:
             exit = self.pick_exit(pos)
-        return self.pathfinder.get_path(pos, exit), exit
+        return self.pathfinder.get_path(pos, exit, self.random), exit
     
     def get_ecolor(self, pos):
         return self.exit_colors[pos]

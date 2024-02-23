@@ -26,10 +26,6 @@ def randomRGB():
     val = hsl2rgb(np.random.randint(0, 360), 100, 80)
     return val
 
-# def randomRGB():
-#     val = f"{''.join(['%02x' % x for x in np.random.randint(0, 255, 3)])}"
-#     return val
-
 def portrayCell(cell):
     """
     This function is registered with the visualization server to be called
