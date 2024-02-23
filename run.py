@@ -76,7 +76,7 @@ test_map = [
 
 map = np.array(test_map, dtype=object)
 
-map = city.city_planner(5, 5, 1)
+map = city.city_planner(6, 6, 1)
 tiles = {
     '1111i': _4WayI,
     '1111t': _4WayTL,
@@ -97,7 +97,7 @@ if GUI:
     w = list(tiled_layers.values())[0].shape[0]
     h = list(tiled_layers.values())[0].shape[1]
 
-    SCALE_MULTIPLE = 10
+    SCALE_MULTIPLE = 7
 
     canvas_element = traffic.CanvasGridS(traffic.portrayCell, w, h, w*SCALE_MULTIPLE, h*SCALE_MULTIPLE)
     chart = mesa.visualization.ChartModule([{

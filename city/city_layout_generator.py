@@ -310,10 +310,11 @@ class Pathfinder():
             # Remove the current node from the open set and add it to the closed set
             open_set.remove(current)
             closed_set.add(current)
+
             # Explore the neighbors of the current node
             for neighbor in adjacency_map[current]:
                 # Calculate the tentative g_score for the neighbor
-                tentative_g_score = g_score[current] + 1
+                tentative_g_score = g_score[current] + self.speeds[current[0]][current[1]]
                 # If the neighbor is already in the closed set and the tentative g_score is higher, skip it
                 if neighbor in closed_set and tentative_g_score >= g_score[neighbor]:
                     continue
@@ -330,6 +331,8 @@ class Pathfinder():
 
     def __init__(self, city_layout):
         self.adj_map = self.generate_adjacency_map(city_layout)
+        # self.speeds  = [[1 if r.count('1') > 2 else 9999 for r in c] for c in city_layout]
+        self.speeds  = [[r.count('1') * 999 for r in c] for c in city_layout]
 
     def get_path(self, from_where, to_where):
         # print(f'Choosen exit: {to_where} from {from_where}')

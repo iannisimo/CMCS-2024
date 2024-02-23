@@ -8,6 +8,14 @@ from copy import copy as deepcopy
 
 DEBUG = False
 
+FAST_LANES = [
+    traffic.OrColor.ORIGIN_1_IN,
+    traffic.OrColor.ORIGIN_1_OUT,
+    traffic.OrColor.ORIGIN_2_I,
+    traffic.OrColor.ORIGIN_2_LL,
+    traffic.OrColor.ORIGIN_2_LR,
+]
+
 def rotate(vector, direction):
     if direction == (0,1):             # up.
         return np.dot(np.array([[0,1],[-1,0]]), vector)
@@ -67,9 +75,11 @@ def rotatePath(path_i_0, path_i_1):
 
 
 CELL_LENGTH = 1
-MAX_SPEED = 2.5
 ACCELERATION = .09
 DECELERATION = - 0.17
+
+FAST_SPEED = 5
+SLOW_SPEED = 1
 
 DEADLOCK_PATIENCE = 4
 
@@ -104,6 +114,8 @@ class Car(Agent):
         self.type = traffic.BGColor.CAR
 
         self.id = self.model.next_uid()
+
+        self.max_speed = 1
 
         self.cell_travelled = 0
         self.alive_time = 0
@@ -193,7 +205,7 @@ class Car(Agent):
         elif self.state == State.DECELERATING:
             return self.speed
         elif self.state == State.CRUISING:
-            return MAX_SPEED
+            return self.max_speed
         elif self.state == State.STOPPED:
             return 0
         elif self.state == State.SLOW_CRUISING:
@@ -202,12 +214,21 @@ class Car(Agent):
     @property
     def time_to_stop(self):
         return - (self.speed) / DECELERATION
+    
+    def time_to_speed(self, desired_speed):
+        return - (self.speed - desired_speed) / DECELERATION
 
     @property
     def safe_distance(self):
         # Get the distance needed to stop given the current speed and the DECELERATION rate
         delta_s = ((self.speed) * self.time_to_stop) + 0.5 * DECELERATION * (self.time_to_stop ** 2)
         return delta_s
+
+    @property
+    def decel_distance(self):
+        delta_s = ((self.speed) * self.time_to_speed(SLOW_SPEED)) + 0.5 * DECELERATION * (self.time_to_speed(SLOW_SPEED) ** 2)
+        return delta_s
+
     
     def car_at(self, pos):
         cell = self.getCell(pos)
@@ -236,11 +257,22 @@ class Car(Agent):
             return True and not last
         return False
     
+    def slow_origin_at(self, pos):
+        cell = self.getCell(pos)
+        cell = [x for x in cell if x != self]
+        cell_types = [x.type for x in cell]
+        origin = [x for x in cell_types if type(x) == traffic.OrColor]
+        slow = [x for x in origin if x not in FAST_LANES]
+        if len(slow) > 0:
+            return True
+        return False
+        
     def obstacle_in_front(self, up_to):
         traj_len = len(self.trajectory)
         traj = self.trajectory if traj_len > 0 else [(0, 0)]
         origin = self.origin_point if traj_len > 0 else self.pos
         self.next_up_to = int(up_to + 1 + (self.next_speed))
+        next_slow_origin = int(self.frac_move + self.decel_distance + 1 + self.next_speed)
         end_direction = self.real_direction
         if len(traj) > 2:
             end_direction = (traj[-1][0] - traj[-2][0], traj[-1][1] - traj[-2][1])
@@ -255,6 +287,10 @@ class Car(Agent):
                 # print(f'{self.id}\t-{pos}')
             if self.obstacle_at(pos, i == self.next_up_to - 1):
                 return pos
+            # TODO: check < or <= 
+            if i < next_slow_origin:
+                if self.slow_origin_at(pos):
+                    return pos
         return None
                 
 
@@ -268,6 +304,10 @@ class Car(Agent):
         if traffic.OrColor in cell_type_types:
             self.direction = self.next_direction
             new_origin = [x.type for x in cell if type(x.type) == traffic.OrColor][0]
+            if new_origin in FAST_LANES:
+                self.max_speed = FAST_SPEED
+            else:
+                self.max_speed = SLOW_SPEED
             self.intent = self.newIntent()
             self.trajectory = self.rotateTrajectory(self.model.trjs[new_origin][self.intent])
             self.origin_point = pos
@@ -375,8 +415,8 @@ class Car(Agent):
         match self.state:
             case State.ACCELERATING:
                 self.speed += ACCELERATION
-                if self.speed > MAX_SPEED:
-                    self.speed = MAX_SPEED
+                if self.speed > self.max_speed:
+                    self.speed = self.max_speed
                     self.state = State.CRUISING
             case State.DECELERATING:
                 self.speed += DECELERATION
@@ -384,7 +424,7 @@ class Car(Agent):
                     self.speed = 0
                     self.state = State.STOPPED
             case State.CRUISING:
-                self.speed = MAX_SPEED
+                self.speed = self.max_speed
             case State.STOPPED:
                 self.speed = 0
             case State.SLOW_CRUISING:
